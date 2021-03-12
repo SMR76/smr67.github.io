@@ -5,8 +5,32 @@ $(document).ready(() => {
         initializeRepositories(data);
     });
 
+    coffeeFunc();
     initEvents();
 });
+
+var cntry = "";
+async function coffeeFunc() {
+    await $.get("http://ip-api.com/json").then((data) => {
+        cntry = data.country;
+    });
+    let coffee = $("#donate");
+
+    
+    if(cntry === "Iran") {
+        coffee.attr('href','https://idpay.ir/s-m-r');
+        coffee.attr('target','_blank');
+    }
+    else {
+        let text = `Donate to my <b class="text-warning">Bitcoin Cash</b><br><small>click to copy!</small>`;
+        let tt = coffee.children('p');      
+        tt.html(text);        
+        
+        coffee.mouseout(()=>{
+            tt.html(text);
+        });
+    }
+}
 
 async function initializeRepositories(repoList) {
     for (const repoInfo of repoList) {
@@ -38,7 +62,7 @@ async function repoAppender(repoInfo) {
 
 function initEvents() {
     // bookmark button
-    $('#bookSB').click(() => {
+    $('#bookmarkMe').click(() => {
         if (window.sidebar) { // Mozilla Firefox Bookmark
             window.sidebar.addPanel(location.href,document.title,"");
             return true;
@@ -79,4 +103,23 @@ function initEvents() {
         let message = $("#welcomeMessage");
         message.slideUp();
     },15000);
+
+    // handle donate click
+    $("#donate").on('click', function() {
+        if(cntry !== "Iran") {
+            let tt = $(this).children('p');
+            tt.html(`<i class="text-light"> Copied!</i>`);
+
+            let bitcoincashAddress = "bitcoincash:qrnwtxsk79kv6mt2hv8zdxy3phkqpkmcxgjzqktwa3";
+            copyToClipboard(bitcoincashAddress);
+        }
+    });
+}
+
+function copyToClipboard(text) {
+    var $temp = $("<input>");
+    $("body").append($temp);
+    $temp.val(text).select();
+    document.execCommand("copy");
+    $temp.remove();
 }

@@ -9,11 +9,15 @@ $(document).ready(() => {
     initEvents();
 });
 
-var cntry = "";
+var cntry = "unknown";
 async function coffeeFunc() {
-    await $.get("http://ip-api.com/json").then((data) => {
-        cntry = data.country;
-    });
+    try {
+        await $.get("https://ip-api.com/json").then((data) => {
+            cntry = data.country;
+        });
+    } catch(e) {
+        //error
+    }
     let coffee = $("#donate");
 
     

@@ -12,7 +12,7 @@ $(document).ready(() => {
 var cntry = "unknown";
 async function coffeeFunc() {
     try {
-        await $.get("https://ip-api.com/json").then((data) => {
+        await $.get("https://ipwhois.app/json/").then((data) => {
             cntry = data.country;
         });
     } catch(e) {

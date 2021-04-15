@@ -7,6 +7,7 @@ $(document).ready(() => {
 
     coffeeFunc();
     initEvents();
+    googleAnalytic();
 });
 
 var cntry = "unknown";
@@ -126,4 +127,12 @@ function copyToClipboard(text) {
     $temp.val(text).select();
     document.execCommand("copy");
     $temp.remove();
+}
+
+function googleAnalytic() {
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-XL9HMP5PK3');
 }

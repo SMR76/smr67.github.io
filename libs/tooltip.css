@@ -1,8 +1,7 @@
-.ctooltips 
-.t-tooltiptext,
-.r-tooltiptext,
-.b-tooltiptext,
-.l-tooltiptext {
+.ctooltips .t-tooltiptext,
+.ctooltips .r-tooltiptext,
+.ctooltips .b-tooltiptext,
+.ctooltips .l-tooltiptext {
     visibility:hidden;
     background-color: black;
     color: #fff;
@@ -65,4 +64,38 @@
         width:130px;
         padding-right:5px;
     }
+}
+
+@media only screen and (max-width: 600px) {
+    .ctooltips .t-tooltiptext,
+    .ctooltips .r-tooltiptext,
+    .ctooltips .b-tooltiptext,
+    .ctooltips .l-tooltiptext{
+        width: 100%;
+
+        top: initial    !important;
+        right: initial  !important;
+        bottom: 0px     !important;
+        left:   0px     !important;
+        opacity:0.8;
+
+        border-radius: 0px;
+        padding: 6px 0 15px 0;
+
+        position: fixed;
+        transform: translateY(0px);
+
+        overflow: auto;
+
+    }
+
+    .ctooltips a:hover [class$="tooltiptext"] {
+        visibility: visible;
+        animation: none;
+    } 
+    .ctooltips [class$="tooltiptext"]::after {
+        content: " ";
+        border-width: 5px;
+        border-style: solid;
+    }   
 }

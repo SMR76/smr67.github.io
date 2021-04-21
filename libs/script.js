@@ -1,10 +1,6 @@
 $(document).ready(() => {
-    let url = "https://api.github.com/users/smr76/repos";
 
-    $.get(url).then((data) => {
-        initializeRepositories(data);
-    });
-
+    initializeRepositories();
     coffeeFunc();
     initEvents();
     googleAnalytic();
@@ -20,7 +16,6 @@ async function coffeeFunc() {
         //error
     }
     let coffee = $("#donate");
-
     
     if(cntry === "Iran") {
         coffee.attr('href','https://idpay.ir/s-m-r');
@@ -37,20 +32,56 @@ async function coffeeFunc() {
     }
 }
 
-async function initializeRepositories(repoList) {
-    for (const repoInfo of repoList) {
-        repoAppender(repoInfo);
-    }
+async function initializeRepositories() {
+    let url = "https://api.github.com/users/smr76/repos";
+    await $.get(url).then((data) => {
+        for (const repoInfo of data) {
+            repoAppender(repoInfo);
+            break;
+        }
+    });
 }
 
 async function repoAppender(repoInfo) {
     let rposContainer = $("#repositories");
     let tag = "";
+    let commit_url = repoInfo.commits_url.substr(0,repoInfo.commits_url.length-6);
+    let commits_road = "";
 
-    await $.get(repoInfo.tags_url).then((data)=>{            
-            if(data.length > 0)
-                tag = data[data.length-1].name;
+    try { 
+        await $.get(repoInfo.tags_url).then((data)=>{            
+        if(data[0] !== undefined)
+            tag = data[data.length-1].name;
         });
+    }
+    catch(e) {
+
+    }
+    await $.get(commit_url).then((data)=>{
+        let cnum = data.length;
+        let index = 0;
+        if(data[0] !== undefined) {
+            
+            for(const x of data) {
+                if(index ++ > 6 || cnum <= 0)
+                    break;
+                commits_road =                
+                    `<a class="commit-node" href="${x.html_url}">
+                    <p>${cnum--}</p>
+                    <p class="ttext">
+                    ${x.commit.author.name}<br/>
+                    ${x.commit.author.date}<br/>
+                    ${x.commit.message}</p>
+                    </a>` + commits_road;
+            }
+
+            commits_road =
+                `<div class="commit-container"><a class="dots"></a>
+                <div class="commit-road">` 
+                + commits_road +
+                `</div>${cnum >= 1  ? '<div class="dots"></div>' : ''}</div>`;
+        }
+    });
     
     var repoFormat =
         `<div class="row pt-1 pb-1 rounded"><div class="col-12 col-md-6 small text-left">
@@ -60,6 +91,8 @@ async function repoAppender(repoInfo) {
         <span  class="badge badge-dark">${tag}</span>
         </div><div class="col-12 pt-2 pt-md-0 col-md-6 small text-muted text-left">
         ${repoInfo.description != null? repoInfo.description : "no description."}
+        </div><div class="col-12 pt-2 pt-md-0 small" style="height:55px;">
+        ${commits_road}
         </div></div></div>`;
     
     rposContainer.append(repoFormat);   

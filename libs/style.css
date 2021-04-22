@@ -41,4 +41,4 @@
 .bi-cup-fill:hover::before              {color:#a55d00;}
 .bi-bookmark-heart-fill:hover::before   {color:#ff004c;}
 
-[class*=" bi-"]::before {transition: color 0.5s linear;}
+[class*=" bi-"]::before {line-height: 1.1;transition: color 0.5s linear;}

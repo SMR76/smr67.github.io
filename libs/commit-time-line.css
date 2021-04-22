@@ -1,3 +1,6 @@
+.commit-column {
+    display: none;
+}
 .commit-container {
     padding-left: 30px; 
 }

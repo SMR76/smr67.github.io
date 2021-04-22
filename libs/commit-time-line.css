@@ -1,0 +1,113 @@
+.commit-container {
+    padding-left: 30px; 
+}
+
+.commit-container .commit-road {
+    height: 50px;
+    position:absolute;
+    display: flex;
+}
+.commit-container p::selection{ 
+    visibility:hidden; 
+}
+.dots {    
+    position:relative;
+    height:50px;width:35px;
+}
+.dot {
+    position: absolute;
+    top:  47%;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background-color: #aaa;    
+}
+.dots .dot:nth-child(2){left: 10px;}
+.dots .dot:nth-child(3){left: 20px;}
+.dots:hover .dot{animation: dotanim 1s}
+.dots:hover .dot:nth-child(2){animation-delay: 0.2s;}
+.dots:hover .dot:nth-child(3){animation-delay: 0.4s;}
+
+@keyframes dotanim {
+    0% {
+        top:  47%;
+    }
+    50%{
+        top:  30%;
+    }
+    100%{
+        top:  47%;
+    }
+}
+
+.commit-container .commit-road .commit-node {
+    position:relative;
+    height:30px;width:30px;
+    margin: auto 40px auto auto;
+    
+    display:inline-flex;
+    justify-content:center;
+    align-items: center;
+    
+    border-radius: 50%;
+    border:#aaa 2px solid;
+    color:#aaa;
+    cursor: pointer;
+    text-decoration: none;
+    transition-property: width,height;
+    transition-duration: 0.5s;
+}
+.commit-container .commit-road .commit-node:hover {
+    width: 40px;height: 40px;
+    font-weight: 500;
+    border-color:#999;
+}
+.commit-container .commit-road .commit-node:last-child {
+    margin-left: 0px;
+}
+.commit-container .commit-road .commit-node::after {
+    position:absolute;
+    top:50%;left:101%;
+    height:2px;width:42px;
+    transform: translateY(-50%);
+    background-color:#aaa;
+    content:'';
+}
+.commit-container .commit-road .commit-node:last-child::after {
+    visibility:hidden;
+}
+.commit-container .commit-road .commit-node p{
+    margin:0;
+    font-size: 12px;
+}
+.commit-container .commit-road .commit-node #id{
+    width: inherit;
+    height: inherit;
+    text-align:center;
+}
+.commit-container  .ttext{
+    position: absolute;
+    top: 90%;
+    padding: 10px;
+    margin: 0px;
+    border-radius: 5px;
+    max-width: 200px;
+    opacity: 0;
+    overflow: hidden;
+    visibility: hidden;
+    background-color: #999;
+    color: #fff;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 400;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    z-index: 1;
+    transition-duration: 0.5s;
+    transition-property: bottom,opacity;
+}
+.commit-container .commit-node:hover .ttext {
+    visibility: visible;
+    top: 140%;
+    opacity: 1;
+}

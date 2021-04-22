@@ -49,7 +49,7 @@ async function repoAppender(repoInfo) {
     let rposContainer = $("#repositories");
     let tag = "";
     let commit_url = repoInfo.commits_url.substr(0,repoInfo.commits_url.length-6);
-    let git_main_commits_url = 'https://github.com/' + rposContainer + '/commits/main';
+    let git_main_commits_url = 'https://github.com/' + repoInfo.full_name + '/commits/main';
     let commits_road = "";
     let cnum = 0;
 
@@ -89,7 +89,7 @@ async function repoAppender(repoInfo) {
 
             commits_road =
                 `<div class="commit-container">
-                <div class="commit-road"><a class="dots" href="${git_main_commits_url}">
+                <div class="commit-road"><a class="dots" target="_blank" href="${git_main_commits_url}">
                 ${cnum >= 1  ? '<div class="dot"></div>'.repeat(3) : ''}` 
                 + commits_road +
                 `</div></div></div>`;

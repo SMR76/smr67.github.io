@@ -1,7 +1,4 @@
-.ctooltips .t-tooltiptext,
-.ctooltips .r-tooltiptext,
-.ctooltips .b-tooltiptext,
-.ctooltips .l-tooltiptext {
+.ctooltips [class$="tooltiptext"]{
     visibility:hidden;
     background-color: black;
     color: #fff;
@@ -20,11 +17,7 @@
 .ctooltips .b-tooltiptext{left: 50%; top: 130%;transform: translateX(-50%);}
 .ctooltips .l-tooltiptext{right:120%;top: 50%;transform: translateY(-50%);}
 
-.ctooltips 
-.t-tooltiptext::after,
-.r-tooltiptext::after,
-.b-tooltiptext::after,
-.l-tooltiptext::after {
+.ctooltips [class$="tooltiptext"]::after {
     content: " ";
     border-width: 5px;
     position: absolute;
@@ -67,10 +60,7 @@
 }
 
 @media only screen and (max-width: 600px) {
-    .ctooltips .t-tooltiptext,
-    .ctooltips .r-tooltiptext,
-    .ctooltips .b-tooltiptext,
-    .ctooltips .l-tooltiptext{
+    .ctooltips [class$="tooltiptext"]{
         width: 100%;
 
         top: initial    !important;
@@ -85,7 +75,7 @@
         position: fixed;
         transform: translateY(0px);
 
-        overflow: auto;
+        overflow: hidden;
 
     }
 

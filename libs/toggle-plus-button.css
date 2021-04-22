@@ -1,0 +1,33 @@
+.toggle-plus {
+    display: inline-block;
+    width: 10px;
+    height: 12px;
+}
+.toggle-plus span {
+    position: relative;
+    display: block;
+    height: 15%;
+}
+.toggle-plus span:after,
+.toggle-plus span:before {
+    content: "";
+    width: 100%;
+    height: 90%;
+    position: absolute;
+    background-color: #bebebe;
+    transition: all 0.3s;
+    border-radius: 3px;
+    transform-origin: 50% 50%;
+    top: 250%;
+
+    transition: all 0.8s ease;
+}
+.toggle-plus span::after {
+    transform: rotate(90deg);
+}
+.toggle-plus.on span::after{
+    transform: rotate(-180deg);
+}
+.toggle-plus.on span::before{
+    transform: rotate(720deg);
+}

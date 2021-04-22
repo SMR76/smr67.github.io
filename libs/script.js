@@ -2,8 +2,8 @@ $(document).ready(() => {
 
     initializeRepositories();
     coffeeFunc();
-    initEvents();
     googleAnalytic();
+    initEvents();
 });
 
 var cntry = "unknown";
@@ -32,9 +32,13 @@ async function coffeeFunc() {
     }
 }
 
+var addedRepos = 0;
+var totalRepos = 0;
+
 async function initializeRepositories() {
     let url = "https://api.github.com/users/smr76/repos";
     await $.get(url).then((data) => {
+        totalRepos = data.length;
         for (const repoInfo of data) {
             repoAppender(repoInfo);
         }
@@ -47,6 +51,7 @@ async function repoAppender(repoInfo) {
     let commit_url = repoInfo.commits_url.substr(0,repoInfo.commits_url.length-6);
     let git_main_commits_url = 'https://github.com/' + rposContainer + '/commits/main';
     let commits_road = "";
+    let cnum = 0;
 
     try { 
         await $.get(repoInfo.tags_url).then((data)=>{            
@@ -58,8 +63,15 @@ async function repoAppender(repoInfo) {
         //in case of handling errors
     }
 
-    await $.get(commit_url).then((data)=>{
-        let cnum = data.length;
+    await $.ajax({
+        type: 'GET',
+        url: commit_url + '?per_page=1',
+        success: 
+        function(d, ts, r){
+            cnum = r.getResponseHeader('link').match(/\d+(?=>;)/g)[1];
+    }});
+
+    await $.get(commit_url + '?per_page=3').then((data)=>{
         let index = 0;
         if(data[0] !== undefined) {            
             for(const x of data) {
@@ -86,17 +98,39 @@ async function repoAppender(repoInfo) {
     
     var repoFormat =
         `<div class="row pt-1 pb-1 rounded repo"><div class="col-12 col-md-6 small text-left">
+        <div class="toggle-plus"><span></span></div>
         <a class="alert no-text-deco text-dark text-capitalize" href="${repoInfo.html_url}" target="_blank">
         ${repoInfo.name}
         ${repoInfo.fork == true? '<sub class="text-primary">forked</sub>' : ''}</a>
         <span  class="badge badge-dark">${tag}</span>
         </div><div class="col-12 pt-2 pt-md-0 col-md-6 small text-muted text-left">
         ${repoInfo.description != null? repoInfo.description : "no description."}
-        </div><div class="col-12 pt-2 pt-md-0 small" style="height:55px;">
+        </div><div class="col-12 pt-2 pt-md-0 small commit-column" style="height:55px;">
         ${commits_road}
         </div></div></div>`;
     
     rposContainer.append(repoFormat);   
+    
+    
+    addedRepos++;
+    //when all repositories added, event get enabled.
+    if(addedRepos === totalRepos) {
+        // add click event
+        $('.repo').on('click', function() {
+            $($(this).children('div')[2]).slideToggle();
+            $toggle = $($(this).find('.toggle-plus')[0]);
+            if (!$toggle.hasClass('on')) {
+                $toggle.addClass('on');
+            } else {
+                $toggle.removeClass('on');
+            }
+        });
+
+        $repo = $($('.repo')[0]);
+
+        $($repo.find('.toggle-plus')[0]).addClass('on');
+        $($repo.children('div')[2]).slideDown();
+    }
 }
 
 function initEvents() {
@@ -152,10 +186,6 @@ function initEvents() {
             let bitcoincashAddress = "bitcoincash:qrnwtxsk79kv6mt2hv8zdxy3phkqpkmcxgjzqktwa3";
             copyToClipboard(bitcoincashAddress);
         }
-    });
-
-    $('.repo').on('click', function() {
-        $(this).children('div')[2].fadeToggle();
     });
 }
 

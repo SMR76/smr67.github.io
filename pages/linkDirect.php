@@ -8,10 +8,13 @@
 
     <link rel="stylesheet" href="../resources/fonts/bootstrap-font/bootstrap-icons.css"/>
     <link rel="stylesheet" href="../libs/bootstrap-4.5.0-dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="libs/hamberger-button.css"/>
+    <link rel="stylesheet" href="libs/style.css"/>
     
     <script type="text/javascript" src="../libs/jquery/3.5.1/jquery-3.5.1.min.js"></script>
     <script type="text/javascript" src="../libs/bootstrap-4.5.0-dist/js/bootstrap.min.js"></script>
-
+    <script type="text/javascript" src="libs/hamberger-button.js"></script>
+    
     <script>
         function urlKeyup(obj) {
             let div = $('#charCount')
@@ -26,7 +29,28 @@
     </script>
 </head>
 <body>
-
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a id="navbarNavBrand" class="navbar-brand" href="..">
+            SMR (home)
+        </a>
+        <a id="toggle"  type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav"
+        aria-expanded="false" aria-label="Toggle navigation"><span></span></a>
+        
+        <div id="navbarNav" class="collapse navbar-collapse">
+            <ul class="navbar-nav text-right">
+                <li class="nav-item">
+                    <a class="nav-link" href="../#myRepositories">
+                        My Repositories
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="../#contactMe">
+                        Contact Me
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
 <?php
 define('WP_DEBUG', false);
 
@@ -111,8 +135,7 @@ if (isset($_POST['url'],$_POST['pass']) && !isset($_GET['message'])) {
                     file_put_contents($outputName, $fp);
                     $messageKey = 'downloaded';
 
-                    fclose($fp);                    
-                    
+                    fclose($fp); 
                 }
                 else {
                     $messageKey = 'notFound';
@@ -180,8 +203,7 @@ if (isset($_POST['url'],$_POST['pass']) && !isset($_GET['message'])) {
                 <div class='form-group text-info text-center small mt-3'>
                     here is your file link.<br>
                     $outputName<br>
-                    <a  href='$outputName' 
-                        class='mt-4 btn btn-dark' download='$basename'>
+                    <a  href='$outputName' class='mt-4 btn btn-dark' download='$basename'>
                         Download file
                     </a>
                 </div>";

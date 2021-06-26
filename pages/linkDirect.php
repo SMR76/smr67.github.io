@@ -8,12 +8,11 @@
 
     <link rel="stylesheet" href="../resources/fonts/bootstrap-font/bootstrap-icons.css"/>
     <link rel="stylesheet" href="../libs/bootstrap-4.5.0-dist/css/bootstrap.min.css"/>
-    <link rel="stylesheet" href="libs/hamberger-button.css"/>
-    <link rel="stylesheet" href="libs/style.css"/>
+    <link rel="stylesheet" href="../libs/hamberger-button.css"/>
     
     <script type="text/javascript" src="../libs/jquery/3.5.1/jquery-3.5.1.min.js"></script>
     <script type="text/javascript" src="../libs/bootstrap-4.5.0-dist/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="libs/hamberger-button.js"></script>
+    <script type="text/javascript" src="../libs/hamberger-button.js"></script>
     
     <script>
         function urlKeyup(obj) {
@@ -81,7 +80,7 @@ $messageArray = [
 
 $userIp         = $_SERVER['REMOTE_ADDR'];
 
-$hardCodePass   = '';
+$hardCodePass   = 'c7k7Mjb3JG77Ue3Y';
 $messageKey     = '';
 
 $maxSpace       = 3500000000;   //bytes

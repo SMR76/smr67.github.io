@@ -150,7 +150,7 @@ if (isset($_POST['url'],$_POST['pass']) && !isset($_GET['message'])) {
 
         if (filter_var($url, FILTER_VALIDATE_URL) == TRUE && endsWith($url, ["php","sh","exe","html","js"]) == FALSE) {
             $hash = bin2hex(random_bytes(16));
-            $outputName = "download/$hash-".$url;
+            $outputName = "download/$hash-".basename($url);
             $basename   = basename($url);
 
             if (!file_exists('download/')) {

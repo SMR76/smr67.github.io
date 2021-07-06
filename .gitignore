@@ -1,3 +1,4 @@
 # Ignored types
 *test*
 pages/download/*
+pages/error*

@@ -150,11 +150,11 @@ if (isset($_POST['url'],$_POST['pass']) && !isset($_GET['message'])) {
 
         if (filter_var($url, FILTER_VALIDATE_URL) == TRUE && endsWith($url, ["php","sh","exe","html","js"]) == FALSE) {
             $hash = bin2hex(random_bytes(16));
-            $outputName = "download/$hash.". pathinfo($url, PATHINFO_EXTENSION);
+            $outputName = "download/$hash-".$url;
             $basename   = basename($url);
 
             if (!file_exists('download/')) {
-                mkdir('download/', 0655, true);
+                mkdir('download/', 0777, true);
             }
 
             $fileSize = urlFileSize($url);
@@ -165,9 +165,11 @@ if (isset($_POST['url'],$_POST['pass']) && !isset($_GET['message'])) {
 
                 if ( $fp ) {
                     file_put_contents($outputName, $fp);
-                    $messageKey = 'downloaded';
-
                     fclose($fp); 
+
+                    chmod($outputName, 0444);
+                    
+                    $messageKey = 'downloaded';
                 }
                 else {
                     $messageKey = 'notFound';

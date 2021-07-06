@@ -71,6 +71,23 @@ function urlFileSize($url) {
     return -1;
 }
 
+function urlExists($url=NULL)  
+{  
+    if($url == NULL) return false;  
+    $ch = curl_init($url);  
+    curl_setopt($ch, CURLOPT_TIMEOUT, 5);  
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);  
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);  
+    $data = curl_exec($ch);  
+    $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);  
+    curl_close($ch);  
+    if($httpcode>=200 && $httpcode<300){  
+        return true;  
+    } else {  
+        return false;  
+    }  
+} 
+
 $BASE_URL = strtok($_SERVER['REQUEST_URI'],'?');
 $messageArray = [
     'downloaded'=> "<div class='alert alert-success' role='alert'>ready to download.</div>",
@@ -80,7 +97,13 @@ $messageArray = [
 
 $userIp         = $_SERVER['REMOTE_ADDR'];
 
-$hardCodePass   = 'c7k7Mjb3JG77Ue3Y';
+$whitelist = array(
+    'localhost',
+    '127.0.0.1',
+    '::1'
+);
+
+$hardCodePass   = '';
 $messageKey     = '';
 
 $maxSpace       = 3500000000;   //bytes
@@ -88,6 +111,10 @@ $usedSpace      = 0;            //bytes
 $freeSpace      = 0;            //bytes
 
 $filesSize      = [];
+
+if(!in_array($_SERVER['REMOTE_ADDR'], $whitelist)){
+    $hardCodePass   = 'c7k7Mjb3JG77Ue3Y';
+}
 
 if(file_exists('download/')) {
     foreach(glob('download/*.*') as $file) {
@@ -117,6 +144,10 @@ if (isset($_POST['url'],$_POST['pass']) && !isset($_GET['message'])) {
         $messageKey = 'invalid';
     }
     else if( 3 < $len && $len < 256) {
+        /**
+         * validate 
+         */
+
         if (filter_var($url, FILTER_VALIDATE_URL) == TRUE && endsWith($url, ["php","sh","exe","html","js"]) == FALSE) {
             $hash = bin2hex(random_bytes(16));
             $outputName = "download/$hash.". pathinfo($url, PATHINFO_EXTENSION);
@@ -126,7 +157,9 @@ if (isset($_POST['url'],$_POST['pass']) && !isset($_GET['message'])) {
                 mkdir('download/', 0655, true);
             }
 
-            if(urlFileSize($url) < $freeSpace) {                
+            $fileSize = urlFileSize($url);
+
+            if($fileSize > 0 || $fileSize < $freeSpace) {                
 
                 $fp = fopen($url, 'r');
 

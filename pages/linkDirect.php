@@ -28,6 +28,29 @@
     </script>
 </head>
 <body>
+    <?php
+        include_once("mirrorLinkHandler.php");
+        
+        ini_set('display_errors', 'Off');
+        $maxSpace   = 3500000000;
+        $uSpace     = 0;
+        
+        $BASE_URL   = strtok($_SERVER['REQUEST_URI'],'?');
+        $mLinkhandler = new mirrorLinkHandler($_SERVER['SERVER_ADDR'],'root','',$maxSpace);
+        
+        if (isset($_POST['url'],$_POST['pass']) && $_POST['url'] != '' && $_POST['pass'] != '' ) {
+            list($freeSpace,$uSpace,$filesSize) = $mLinkhandler->calclulateFilesSpace();
+            list($messageKey,$outputName) = $mLinkhandler->createMirrorLink($_POST['url'],$_POST['pass'],$freeSpace);
+
+            $fileList = mirrorLinkHandler::fileList('download/');
+
+        } 
+        else if(isset($_POST['regUsername'],$_POST['regPassword']) 
+                    && $_POST['regUsername'] != '' && $_POST['regPassword'] != '' ) {
+            echo 'hi';
+        }
+
+    ?>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <a id="navbarNavBrand" class="navbar-brand" href="..">
             SMR (home)
@@ -47,155 +70,30 @@
                         Contact Me
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" onclick="$('#register-modal').modal('show');">
+                        Get Verification
+                    </a>
+                </li>
             </ul>
         </div>
     </nav>
-<?php
-define('WP_DEBUG', false);
 
-function endsWith( $string, array $subStrs ) {
-    foreach($subStrs as $subStr) {
-        $length = strlen( $subStr );
-        if($length && substr( $string, -$length ) !== $subStr)
-            return false;
-    }
-    return true;
-}
-
-function urlFileSize($url) {
-    if($url) {        
-        $headers = get_headers($url,true);
-        $size = isset($headers['Content-Length']) ? $headers['Content-Length'] : -1;
-        return $size;
-    }
-    return -1;
-}
-
-function urlExists($url=NULL)  
-{  
-    if($url == NULL) return false;  
-    $ch = curl_init($url);  
-    curl_setopt($ch, CURLOPT_TIMEOUT, 5);  
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);  
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);  
-    $data = curl_exec($ch);  
-    $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);  
-    curl_close($ch);  
-    if($httpcode>=200 && $httpcode<300){  
-        return true;  
-    } else {  
-        return false;  
-    }  
-} 
-
-$BASE_URL = strtok($_SERVER['REQUEST_URI'],'?');
-$messageArray = [
-    'downloaded'=> "<div class='alert alert-success' role='alert'>ready to download.</div>",
-    'notFound'  => "<div class='alert alert-warrning' role='alert'>download intrupted.</div>",
-    'invalid'   => "<div class='alert alert-danger' role='alert'>invalid url or password.</div>"
-];
-
-$userIp         = $_SERVER['REMOTE_ADDR'];
-
-$whitelist = array(
-    'localhost',
-    '127.0.0.1',
-    '::1'
-);
-
-$hardCodePass   = '';
-$messageKey     = '';
-
-$maxSpace       = 3500000000;   //bytes
-$usedSpace      = 0;            //bytes
-$freeSpace      = 0;            //bytes
-
-$filesSize      = [];
-
-if(!in_array($_SERVER['REMOTE_ADDR'], $whitelist)){
-    $hardCodePass   = 'c7k7Mjb3JG77Ue3Y';
-}
-
-if(file_exists('download/')) {
-    foreach(glob('download/*.*') as $file) {
-        $fs = filesize($file);
-        $filesSize[] = ($fs/$maxSpace)*100;
-        
-        $usedSpace += $fs;
-    }
-}
-
-$freeSpace = $maxSpace - $usedSpace;
-
-
-$dir = 'download/';
-$fileList = glob($dir.'*.*');
-foreach($fileList as $file) {
-    if(time() - filemtime($file) > 14400) // 4 hour
-        unlink($file);
-}
-
-if (isset($_POST['url'],$_POST['pass']) && !isset($_GET['message'])) {
-        
-    $url = filter_var($_POST['url'], FILTER_SANITIZE_URL);
-    $len = strlen($url);
-
-    if($_POST['pass'] != $hardCodePass) {
-        $messageKey = 'invalid';
-    }
-    else if( 3 < $len && $len < 256) {
-        /**
-         * validate 
-         */
-
-        if (filter_var($url, FILTER_VALIDATE_URL) == TRUE && endsWith($url, ["php","sh","exe","html","js"]) == FALSE) {
-            $hash = bin2hex(random_bytes(16));
-            $outputName = "download/$hash-".basename($url);
-            $basename   = basename($url);
-
-            if (!file_exists('download/')) {
-                mkdir('download/', 0777, true);
-            }
-
-            $fileSize = urlFileSize($url);
-
-            if($fileSize > 0 || $fileSize < $freeSpace) {                
-
-                $fp = fopen($url, 'r');
-
-                if ( $fp ) {
-                    file_put_contents($outputName, $fp);
-                    fclose($fp); 
-
-                    chmod($outputName, 0444);
-                    
-                    $messageKey = 'downloaded';
-                }
-                else {
-                    $messageKey = 'notFound';
-                }
-            }
-        }
-        else {
-            $messageKey = 'invalid';
-        }
-    }
-}
-?>
-    <div class="container w-75 pt-4">
+    <div class="container w-75 pt-5 pb-5">
         <form  name='upload' method='post' action="<?php echo $BASE_URL; ?>">
 
             <div class="form-group">
                 <?php
-                    if($messageKey !== '')
-                        echo ($messageArray[$messageKey]);
+                    if(isset($messageKey)) {
+                        echo mirrorLinkHandler::statusMessage($messageKey);
+                    }
                 ?>
             </div>
             <div class="form-group">
                 <label for="url" class="text-dark">file url:</label>
                 <div class="form-inline">
-                    <input type="text"  class="form-control col-11" name="url" id="url" aria-describedby="helpId" placeholder="file url on web. e.g. https://example.com/file." onkeyup="urlKeyup(this);">
-                    <small id="charCount" class="form-text  col-1 text-muted">0/256</small>
+                    <input type="text"  class="form-control col-10" name="url" id="url" aria-describedby="helpId" placeholder="file url on web. e.g. https://example.com/file." onkeyup="urlKeyup(this);" required>
+                    <small id="charCount" class="form-text  col-2 text-muted text-right">0/256</small>
                 </div>
                 <small id="helpId" class="form-text text-muted">
                     enter url of your desired file.
@@ -203,22 +101,24 @@ if (isset($_POST['url'],$_POST['pass']) && !isset($_GET['message'])) {
             </div>
                     
             <div class="row mb-4">
-                <div class="col-8">
+                <div class="col-6">
                     used space:
                 </div>
-                <div class="col-4 text-right">
-                    <?php echo round($usedSpace/1048576,2)."/".round($maxSpace/1048576,2)." MB"; ?>
+                <div class="col-6 text-right">
+                    <?php echo round($uSpace/1048576,2)."/".round($maxSpace/1048576,2)." MB";?>
                 </div>
                 <div class="col-12">
                     <div class="progress">
                     <?php
-                    $color = 0;
-                    foreach($filesSize as $fs) {
-                        echo "<div class='progress-bar' role='progressbar' 
-                                style='width: $fs%; background-color: hsl($color, 100%, 80%);'>
-                                ". ($fs > 10 ? round($fs * $maxSpace / 1048576)." MB" : '') ."</div>";
-                        $color = ($color+35) % 350;
-                    }
+                        $color = 0;
+                        if(isset($filesSize)) {
+                            foreach($filesSize as $fs) {
+                                echo "<div class='progress-bar' role='progressbar' 
+                                        style='width: $fs%; background-color: hsl($color, 100%, 80%);'>
+                                        ". ($fs > 10 ? round($fs * $maxSpace / 1048576)." MB" : '') ."</div>";
+                                $color = ($color+35) % 350;
+                            }
+                        }
                     ?>
                     </div>
                 </div>
@@ -232,7 +132,8 @@ if (isset($_POST['url'],$_POST['pass']) && !isset($_GET['message'])) {
                 <input class="btn btn-light" type="submit" value="Upload" id='submit' name='submit'>
             </div>
              <?php
-             if($messageKey == 'downloaded') {
+             if(isset($messageKey,$outputName) && $messageKey == 'downloaded') {
+                 $basename = basename($outputName);
                  echo "
                 <div class='form-group text-info text-center small mt-3'>
                     here is your file link.<br>
@@ -244,6 +145,56 @@ if (isset($_POST['url'],$_POST['pass']) && !isset($_GET['message'])) {
              }
             ?>
         </form>
+        <div class='container-fluid'>
+            <div class="row">
+                <div class="col-12">
+                    current links:
+                </div>
+            </div>
+            <?php
+                $color = 0;
+                $id = 1;
+                foreach($fileList as $file) {
+                    $baseName = substr($file,strpos($file, "-") + 1);
+                    echo "
+                        <div class='row mt-1 rounded bg-light'>
+                            <div    class='col-2 rounded-left text-secondary' 
+                                    style='background-color: hsl($color, 100%, 95%);'>
+                                $id
+                            </div>
+                            <div class='col-10'>
+                                <a  class='text-secondary text-decoration-none' href = '$file'>
+                                    $baseName
+                                </a>
+                            </div>
+                        </div>
+                   ";
+                    $color = ($color+35) % 350;
+                    $id++;
+                }
+            ?> 
+        </div>
     </div>
+
+    <form  name='upload' method='post' action="<?php echo $BASE_URL; ?>">
+        <div  id="register-modal" class="modal fade" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div id="modal-body" class="modal-body container">
+                            <div class="form-group form-inline">
+                                <input type="text"  class="form-control col-6" name="regUsername" placeholder="username" required>
+                                <div class="col-1"></div>
+                                <input type="text"  class="form-control col-5" name="regPassword" placeholder="password" required>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">close</button>
+                            <input type="submit"  class="btn btn-info" name="submit" value="apply">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
 </body>
 </html>

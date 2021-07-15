@@ -29,6 +29,7 @@
 </head>
 <body>
     <?php
+        include_once("../function-php/accessCode.php");
         include_once("mirrorLinkHandler.php");
         
         ini_set('display_errors', 'Off');
@@ -36,7 +37,7 @@
         $uSpace     = 0;
         
         $BASE_URL   = strtok($_SERVER['REQUEST_URI'],'?');
-        $mLinkhandler = new mirrorLinkHandler($_SERVER['SERVER_ADDR'],'root','',$maxSpace);
+        $mLinkhandler = new mirrorLinkHandler($_SERVER['SERVER_ADDR'],$gdbUsername,$gdbPass,$maxSpace);
         
         if (isset($_POST['url'],$_POST['pass']) && $_POST['url'] != '' && $_POST['pass'] != '' ) {
             list($freeSpace,$uSpace,$filesSize) = $mLinkhandler->calclulateFilesSpace();
@@ -146,11 +147,13 @@
             ?>
         </form>
         <div class='container-fluid'>
+            <?php if(count($fileList) > 0) :?>
             <div class="row">
                 <div class="col-12">
                     current links:
                 </div>
             </div>
+            <?php endif ?>
             <?php
                 $color = 0;
                 $id = 1;

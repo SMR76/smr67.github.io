@@ -46,7 +46,7 @@ class mirrorLinkHandler {
         $this->connection->close();        
     }
 
-    private function createDataBase() {
+    private function createDataBase():bool {
         $result = $this->connection->query("SELECT count(1) FROM information_schema.tables WHERE `TABLE_SCHEMA` = 'smrdb'");
         if($result) {
             // if database doesn't exist create it.
@@ -59,7 +59,7 @@ class mirrorLinkHandler {
         return false;
     }
 
-    private function createTable() {        
+    private function createTable():bool {        
         $result = $this->connection->query("SELECT count(1) FROM information_schema.tables 
                                             WHERE `TABLE_SCHEMA` = 'smrdb' 
                                             and `TABLE_NAME` = 'passwordList'");
@@ -78,7 +78,7 @@ class mirrorLinkHandler {
         return false;
     }
 
-    private function dbCheckPassword($password) {
+    private function dbCheckPassword($password):?string {
         $md5pass = md5($password);
         $result = $this->connection->query("SELECT * FROM `passwordList` WHERE `password` = '$md5pass'");
 
@@ -90,12 +90,38 @@ class mirrorLinkHandler {
         return null;
     }
 
+    private function varifiedUser(array $varifiedList) {
+        $query = "UPDATE `passwordList` SET varify=TRUE WHERE";
+        $username = next($varifiedList);
+        $query .= "`username`=$username";
+
+        while (($username = next($varifiedList)) !== NULL) {
+            $query .= "or `username`=$username";
+        }        
+
+        $result = $this->connection->query($query);
+        return $result ;
+    }
+
+    private function rejectedUser(array $rejectedList) {
+        $query = "DROP FROM `passwordList` WHERE";
+        $username = next($varifiedList);
+        $query .= "`username`=$username";
+
+        while (($username = next($varifiedList)) !== NULL) {
+            $query .= "or `username`=$username";
+        }        
+
+        $result = $this->connection->query($query);
+        return $result ;
+    }
+
     /** 
      * @return string|null username.
      * 
      * check if password is true.
      */
-    private function varifyPassword($password) {
+    private function varifyPassword($password):?string {
         $whitelist = array(
             'localhost',
             '127.0.0.1',
@@ -103,12 +129,12 @@ class mirrorLinkHandler {
         );
 
         if(in_array($this->serverAddress,$whitelist))
-            ;//return 'admin';
+            return 'admin';
 
         return $this->dbCheckPassword($password);
     }
 
-    private function isFileExist(string $newFileName) {
+    private function isFileExist(string $newFileName):bool {
         $dir = 'download/';
         $fileList = glob($dir.'*.*');
         foreach($fileList as $file) {
@@ -116,6 +142,11 @@ class mirrorLinkHandler {
                 return true;
         }
         return false;
+    }
+
+    private function addUser(array $user): bool {
+        $result = $this->connection->query("INSERT INTO `passwordlist` VALUES NULL,".$user['username'].",".$user['password'].")");
+        return $result ;
     }
 
     public function getMaxSpace() {

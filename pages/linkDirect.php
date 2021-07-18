@@ -35,6 +35,8 @@
         ini_set('display_errors', 'Off');
         $maxSpace   = 3500000000;
         $uSpace     = 0;
+
+        $unvarifiedList = [];
         
         $BASE_URL   = strtok($_SERVER['REQUEST_URI'],'?');
         $mLinkhandler = new mirrorLinkHandler($_SERVER['SERVER_ADDR'],$gdbUsername,$gdbPass,$maxSpace);
@@ -45,10 +47,24 @@
 
             $fileList = mirrorLinkHandler::fileList('download/');
 
+            /**
+             * TODO: show unvarified list to admin.
+             * * use ajax.
+             */ 
+            if($mLinkhandler->varifyPassword($_POST['pass']) == 'admin') {
+                $unvarifiedList = $mLinkhandler->getUnvarifiedList(); 
+            }
         } 
         else if(isset($_POST['regUsername'],$_POST['regPassword']) 
                     && $_POST['regUsername'] != '' && $_POST['regPassword'] != '' ) {
-            echo 'hi';
+            
+            $username = $_POST['regUsername'];
+            $password = $_POST['regPassword'];
+            
+            if(preg_match('/^\w*$/', $input_line) == 1) {
+                $mLinkhandler->addUser(array('username' => $username, 'password' => $password));
+                $messageKey = 'registred';
+            }
         }
 
     ?>

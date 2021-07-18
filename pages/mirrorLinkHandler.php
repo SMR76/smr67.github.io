@@ -116,12 +116,22 @@ class mirrorLinkHandler {
         return $result ;
     }
 
+    private function isFileExist(string $newFileName):bool {
+        $dir = 'download/';
+        $fileList = glob($dir.'*.*');
+        foreach($fileList as $file) {
+            if($newFileName == substr($file,strpos($file, "-") + 1))
+                return true;
+        }
+        return false;
+    }
+
     /** 
      * @return string|null username.
      * 
      * check if password is true.
      */
-    private function varifyPassword($password):?string {
+    public function varifyPassword($password):?string {
         $whitelist = array(
             'localhost',
             '127.0.0.1',
@@ -134,18 +144,10 @@ class mirrorLinkHandler {
         return $this->dbCheckPassword($password);
     }
 
-    private function isFileExist(string $newFileName):bool {
-        $dir = 'download/';
-        $fileList = glob($dir.'*.*');
-        foreach($fileList as $file) {
-            if($newFileName == substr($file,strpos($file, "-") + 1))
-                return true;
-        }
-        return false;
-    }
-
-    private function addUser(array $user): bool {
-        $result = $this->connection->query("INSERT INTO `passwordlist` VALUES NULL,".$user['username'].",".$user['password'].")");
+    public function addUser(array $user): bool {
+        $username   = $user['username'];
+        $md5pass    = md5($user['password']);
+        $result     = $this->connection->query("INSERT INTO `passwordlist` VALUES NULL,$username,$md5pass,FALSE)");
         return $result ;
     }
 

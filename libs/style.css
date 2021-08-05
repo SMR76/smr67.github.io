@@ -13,16 +13,16 @@
     box-shadow: 0px 1px 7px #00000020;
 }
 
-.repo-container h6  {display: inline;}
-.repo-container p   {text-align: justify;}
-#repositories .row  {margin: 5px auto;}
-#repositories div > .row {text-align: left;}
+.repo-container h6          {display    : inline;   }
+.repo-container p           {text-align : justify;  }
+#repositories   .row        {margin     : 5px auto; }
+#repositories   div > .row  {text-align : left;     }
 
-@media only screen and (max-width: 600px) {
-    #repositories .row > div:last-child{padding-top: 5px;}
+@media only screen and (max-width: 768px) {
+    #repositories .row > div:last-child {   padding-top: 5px;}
 }
 
-#contactMe div      {
+#contactMe div {
     position: relative;
     
     width: 50vw;height: 50vw;

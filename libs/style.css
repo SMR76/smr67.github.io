@@ -1,15 +1,26 @@
-  @font-face {
+@font-face {
     font-family: fa-brands-400;
     src: url("../resources/fonts/fa-brands-400.ttf");
     font-display: fallback;
 }
 
-#myRepositories .row:nth-child(even){
-    background-color: #ebebeb;
-}
-
 #myRepositories     {padding:50px 0 100px 0;overflow:auto;color: #000000; background-color: #fff;}
 #contactMe          {padding:50px 0 100px 0;overflow:auto;color: #fff; background-color: #424242;}
+
+.repo-container{
+    background-color:white;    
+    border-radius: 8px;
+    box-shadow: 0px 1px 7px #00000020;
+}
+
+.repo-container h6  {display: inline;}
+.repo-container p   {text-align: justify;}
+#repositories .row  {margin: 5px auto;}
+#repositories div > .row {text-align: left;}
+
+@media only screen and (max-width: 600px) {
+    #repositories .row > div:last-child{padding-top: 5px;}
+}
 
 #contactMe div      {
     position: relative;
@@ -18,18 +29,10 @@
     max-width:  550px;
     max-height: 550px;
 }
-#contactMe div a  {
-    position: absolute;
-}
 
-#contactMe div img  {
-    filter: grayscale(100%);
-    transition: all 0.5s ease;
-}
-#contactMe img:hover {
-    filter: grayscale(0%);
-}
-.no-text-deco, .no-text-deco:hover {text-decoration: none;}
+#contactMe div a  {position: absolute;}
+#contactMe div img  {filter: grayscale(100%);transition: all 0.5s ease;}
+#contactMe img:hover {filter: grayscale(0%);}
 
 .bi-telegram::before {font-family: fa-brands-400 !important;content: "\f3fe";}
 
@@ -42,3 +45,4 @@
 .bi-bookmark-heart-fill:hover::before   {color:#ff004c;}
 
 [class*=" bi-"]::before {line-height: 1.1;transition: color 0.5s linear;}
+

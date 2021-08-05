@@ -1,13 +1,12 @@
 $(document).ready(() => {
-
-    initializeRepositories();
-    coffeeFunc();
+    repositories();
+    coffee();
     googleAnalytic();
-    initEvents();
+    events();
 });
 
 var cntry = "unknown";
-async function coffeeFunc() {
+async function coffee() {
     try {
         await $.get("https://ipwhois.app/json/").then((data) => {
             cntry = data.country;
@@ -15,125 +14,77 @@ async function coffeeFunc() {
     } catch(e) {
         //error
     }
-    let coffee = $("#donate");
+    let coffeeElement = $("#donate");
     
     if(cntry === "Iran") {
-        coffee.attr('href','https://idpay.ir/s-m-r');
-        coffee.attr('target','_blank');
+        coffeeElement.attr('href','https://idpay.ir/s-m-r');
+        coffeeElement.attr('target','_blank');
     }
     else {
         let text = `Donate to my <b class="text-warning">Bitcoin Cash</b><br><small>click to copy!</small>`;
-        let tt = coffee.children('p');      
+        let tt = coffeeElement.children('p');      
         tt.html(text);        
         
-        coffee.mouseout(()=>{
+        coffeeElement.mouseout(()=>{
             tt.html(text);
         });
     }
 }
 
-var addedRepos = 0;
-var totalRepos = 0;
+async function repositories() {
+    let url = "functions/repositoryDataAjax.php";
+    let rpositoriesContainer = $("#repositories");
 
-async function initializeRepositories() {
-    let url = "https://api.github.com/users/smr76/repos";
-    await $.get(url).then((data) => {
-        totalRepos = data.length;
-        for (const repoInfo of data) {
-            repoAppender(repoInfo);
+    let oddCol = 0;
+    let cols = "" , rows = "";
+
+    await $.get(url).then((repositories) => {
+        repositories = JSON.parse(repositories);
+
+        for (const repository of repositories) {
+            cols += `<div class="col-12 col-md-6">${repositoryCellHtml(repository)}</div>`;
+            oddCol = (oddCol+1)%2;
+            if(oddCol == 0) {
+                rpositoriesContainer.append(`<div class="row">${cols}</div>`);
+                cols = "";
+            }
         }
+        rpositoriesContainer.append(`<div class="row">${cols}</div>`);
     });
 }
 
-async function repoAppender(repoInfo) {
-    let rposContainer = $("#repositories");
-    let tag = "";
-    let commit_url = repoInfo.commits_url.substr(0,repoInfo.commits_url.length-6);
-    let git_main_commits_url = 'https://github.com/' + repoInfo.full_name + '/commits/main';
-    let commits_road = "";
-    let cnum = 0;
+function repositoryCellHtml(repository) {
+    let forked = repository.forked == 1? '<sub class="text-primary">forked</sub>' : '';
 
-    try { 
-        await $.get(repoInfo.tags_url).then((data)=>{            
-        if(data[0] !== undefined)
-            tag = data[data.length-1].name;
-        });
-    }
-    catch(e) {
-        //in case of handling errors
-    }
-
-    await $.ajax({
-        type: 'GET',
-        url: commit_url + '?per_page=1',
-        success: 
-        function(d, ts, r){
-            cnum = r.getResponseHeader('link').match(/\d+(?=>;)/g)[1];
-    }});
-
-    await $.get(commit_url + '?per_page=3').then((data)=>{
-        let index = 0;
-        if(data[0] !== undefined) {            
-            for(const x of data) {
-                if(++index  > 3 || cnum <= 0)
-                    break;
-                commits_road =                
-                    `<a class="commit-node" href="${x.html_url}">
-                    <p>${cnum--}</p>
-                    <p class="ttext">
-                    ${x.commit.author.name}<br/>
-                    ${x.commit.author.date}<br/>
-                    ${x.commit.message}</p>
-                    </a>` + commits_road;
-            }
-
-            commits_road =
-                `<div class="commit-container">
-                <div class="commit-road"><a class="dots" target="_blank" href="${git_main_commits_url}">
-                ${cnum >= 1  ? '<div class="dot"></div>'.repeat(3) : ''}` 
-                + commits_road +
-                `</div></div></div>`;
-        }
-    });
-    
-    var repoFormat =
-        `<div class="row pt-1 pb-1 rounded repo"><div class="col-12 col-md-6 small text-left">
-        <div class="toggle-plus"><span></span></div>
-        <a class="alert no-text-deco text-dark text-capitalize" href="${repoInfo.html_url}" target="_blank">
-        ${repoInfo.name}
-        ${repoInfo.fork == true? '<sub class="text-primary">forked</sub>' : ''}</a>
-        <span  class="badge badge-dark">${tag}</span>
-        </div><div class="col-12 pt-2 pt-md-0 col-md-6 small text-muted text-left">
-        ${repoInfo.description != null? repoInfo.description : "no description."}
-        </div><div class="col-12 pt-2 pt-md-0 small commit-column" style="height:55px;">
-        ${commits_road}
-        </div></div></div>`;
-    
-    rposContainer.append(repoFormat);   
-    
-    
-    addedRepos++;
-    //when all repositories added, event get enabled.
-    if(addedRepos === totalRepos) {
-        // add click event
-        $('.repo').on('click', function() {
-            $($(this).children('div')[2]).slideToggle();
-            $toggle = $($(this).find('.toggle-plus')[0]);
-            if (!$toggle.hasClass('on')) {
-                $toggle.addClass('on');
-            } else {
-                $toggle.removeClass('on');
-            }
-        });
-
-        $repo = $($('.repo')[0]);
-
-        $($repo.find('.toggle-plus')[0]).addClass('on');
-        $($repo.children('div')[2]).slideDown();
-    }
+    return `<div class="container-fluid repo-container pt-2">
+            <div class="row"><div class="col-12 col-xl-6">
+            <h6>${repository.name}</h6> ${forked}
+            <span class="badge badge-dark ">${repository.lastTagName}</span>
+            <p class="text-muted small">${repository.description}</p>
+            </div><div class="col-12 col-xl-6">
+            ${commitRoadHtml(repository.lastCommits, repository.mainBranchUrl)}
+            </div></div></div>`;
 }
 
-function initEvents() {
+function commitRoadHtml(lastCommits, mainBranchUrl) {
+    let nodes = [];
+    for(const commit of lastCommits) {
+        nodes.push(`<a class="commit-node" href="${commit.url}">
+                    <p>${commit.id}</p><p class="ttext">
+                    ${commit.author_name}<br/>
+                    ${commit.date}<br/>
+                    ${commit.message}</p></a>`);
+    }
+
+    nodes.reverse();
+
+    return `<div class="commit-container"><div class="commit-road">
+            <a class="dots" target="_blank" href="${mainBranchUrl}">
+            ${lastCommits[0].id > 3  ? '<div class="dot"></div>'.repeat(3) : ''}
+            ${nodes.join("")}</a></div></div>`;
+}
+
+function events() {
     // bookmark button
     $('#bookmarkMe').click(() => {
         if (window.sidebar) { // Mozilla Firefox Bookmark

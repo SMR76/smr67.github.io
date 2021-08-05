@@ -10,17 +10,21 @@ include_once("accessCode.php");
 abstract class baseConnector {
     protected $connection;      
     protected $DBerror;
+    protected $databaseName;
 
     function __construct() {
         global $gdbUsername;
         global $gdbPass;
+        global $gdbName;
+
+        $this->databaseName = $gdbName;
 
         $this->connection = new mysqli('localhost', $gdbUsername, $gdbPass);
         
-        if( $this->connection->connect_errno || $this->createDataBase("smrdb") == false) {
+        if( $this->connection->connect_errno || $this->createDataBase($this->databaseName) == false) {
             $this->abort(601); //die and print contact message
         }
-        $this->connection->select_db("smrdb");        
+        $this->connection->select_db($this->databaseName);        
     }
 
     /**

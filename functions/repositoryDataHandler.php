@@ -23,7 +23,7 @@ class repositoryDataHandler extends baseConnector {
                 ]
             ]);
 
-        $result = $this->createTable("smrdb","repositories");
+        $result = $this->createTable($this->databaseName,"repositories");
         if($result !== "") {
             echo $result;
             $this->abort(602);

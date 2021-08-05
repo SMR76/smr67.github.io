@@ -2,7 +2,7 @@
     display: none;
 }
 .commit-container {
-    padding-left: 30px; 
+    height: 65px;
 }
 
 .commit-container .commit-road {
@@ -46,7 +46,8 @@
 .commit-container .commit-road .commit-node {
     position:relative;
     height:30px;width:30px;
-    margin: auto 40px auto auto;
+    margin: auto;
+    margin-right: 22px;
     
     display:inline-flex;
     justify-content:center;
@@ -71,7 +72,7 @@
 .commit-container .commit-road .commit-node::after {
     position:absolute;
     top:50%;left:101%;
-    height:2px;width:42px;
+    height:2px;width:25px;
     transform: translateY(-50%);
     background-color:#aaa;
     content:'';

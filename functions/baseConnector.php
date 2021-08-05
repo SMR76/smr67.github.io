@@ -1,9 +1,7 @@
 <?php
 /**
  * @author SMR
- * @version 0.4.0
  * @copyright LGPLv3
- * @package dev
  * 
  * base connector abstract class. 
  */

@@ -2,4 +2,4 @@
 *test*
 pages/download/*
 pages/error*
-function-php/accessCode.php
+**/accessCode.php

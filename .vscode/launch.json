@@ -26,6 +26,21 @@
             }
         },
         {
+            "name": "Custom Launch custom dir",
+            "type": "php",
+            "request": "launch",
+            "program": "cronjob/updateRepositoryData.php",
+            "cwd": "C:/wamp64/www/smr76.github.io",
+            "port": 0,
+            "runtimeArgs": [
+                "-dxdebug.start_with_request=yes"
+            ],
+            "env": {
+                "XDEBUG_MODE": "debug,develop",
+                "XDEBUG_CONFIG": "client_port=${port}"
+            }
+        },
+        {
             "name": "Launch Built-in web server",
             "type": "php",
             "request": "launch",

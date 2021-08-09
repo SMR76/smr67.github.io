@@ -115,7 +115,14 @@ class repositoryDataHandler extends baseConnector {
         if($result == false) {
             $this->abort(604);
         }
-        
+
+        $name           = $this->filterSlash($name);
+        $forked         = $this->filterSlash($forked);
+        $lastTagName    = $this->filterSlash($lastTagName);
+        $mainBranchUrl  = $this->filterSlash($mainBranchUrl);
+        $lastCommits    = $this->filterSlash($lastCommits);
+        $description    = $this->filterSlash($description);
+
         // insert if empty else update data.
         if(empty($result->fetch_all(MYSQLI_NUM)) == true) {
             $result = $this->connection->query("INSERT INTO `repositories` VALUES (
@@ -139,6 +146,10 @@ class repositoryDataHandler extends baseConnector {
             return $matches[0];
         }
         return -1;
+    }
+
+    private function filterSlash($var) {
+        return filter_var($var,FILTER_SANITIZE_ADD_SLASHES);
     }
 }
 ?>

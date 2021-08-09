@@ -60,7 +60,7 @@ function repositoryCellHtml(repository) {
             <div class="row"><div class="col-12 col-xl-6">
             <h6>${repository.name}</h6> ${forked}
             <span class="badge badge-dark ">${repository.lastTagName}</span>
-            <p class="text-muted small">${repository.description}</p>
+            <p class="text-muted small">${repository.description || "no description"}</p>
             </div><div class="col-12 col-xl-6">
             ${commitRoadHtml(repository.lastCommits, repository.mainBranchUrl)}
             </div></div></div>`;
@@ -89,7 +89,7 @@ function events() {
     $("#navbarNavBrand,#navbarNav a").on('click', function (event) {
         if (this.hash !== "") {
             event.preventDefault();
-            var hash = this.hash;
+            let hash = this.hash;
 
             $('html, body').animate({
                 scrollTop: $(hash).offset().top - 80
@@ -148,7 +148,7 @@ function changeStatus(tagName, active = false) {
 }
 
 function copyToClipboard(text) {
-    var $temp = $("<input>");
+    let $temp = $("<input>");
     $("body").append($temp);
     $temp.val(text).select();
     document.execCommand("copy");

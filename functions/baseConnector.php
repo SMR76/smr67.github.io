@@ -59,8 +59,6 @@ abstract class baseConnector {
     }
 
     public static function abort($code = 0) {    
-        echo "<style>*{font-family: calibri, 'Courier New', Courier, monospace;}</style>";
-
         die(json_encode([
             "status"    => -1,
             "code"      => $code,

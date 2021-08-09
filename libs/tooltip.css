@@ -43,7 +43,7 @@
 
 .ctooltips a:hover [class$="tooltiptext"] {
     visibility: visible;
-    animation:swipShow linear 0.3s forwards;
+    animation:  swipShow linear 0.3s forwards;
 }
 
 @keyframes swipShow{
@@ -56,6 +56,13 @@
         opacity:0.8;
         width:130px;
         padding-right:5px;
+    }
+}
+
+@media (hover:none) {
+    .ctooltips a:active [class$="tooltiptext"] {
+        visibility: visible;
+        animation:  swipShow linear 0.3s forwards;
     }
 }
 
@@ -83,9 +90,17 @@
         visibility: visible;
         animation: none;
     } 
+
     .ctooltips [class$="tooltiptext"]::after {
         content: " ";
         border-width: 5px;
         border-style: solid;
-    }   
+    }
+}
+
+@media (hover:none) and (max-width: 600px) {
+    .ctooltips a:active [class$="tooltiptext"] {
+        visibility: visible;
+        animation: none;
+    } 
 }

@@ -22,10 +22,10 @@ if(isset($_GET["token"]) && $_GET["token"] == $cronjobToken) {
         ]);
     }
     catch (Exception $e) {
-        repositoryDataHandler::abort(100);
+        repositoryDataHandler::abort(98);
     }
 }
 else {
-    repositoryDataHandler::abort(100);    
+    repositoryDataHandler::abort(99);    
 }
 ?>

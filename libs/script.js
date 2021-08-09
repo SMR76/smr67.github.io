@@ -123,7 +123,7 @@ function events() {
 
             await $.get("cronjob/updateRepositoryData.php?token="+token).then((data) => {
                 let json = JSON.parse(data);
-                if(data.status == 1) { changeStatus("success"); }
+                if(json.status == 1) { changeStatus("success"); }
                 else { changeStatus("error"); }
             });
             

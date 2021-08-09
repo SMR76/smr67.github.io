@@ -32,8 +32,8 @@
         </a>
         <a id="toggle"  type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav"
         aria-expanded="false" aria-label="Toggle navigation"><span></span></a>
-        
-        <div id="navbarNav" class="collapse navbar-collapse">
+
+        <div id="navbarNav" class="collapse navbar-collapse flex-row ">
             <ul class="navbar-nav text-right">
                 <li class="nav-item">
                     <a class="nav-link" href="#myRepositories">
@@ -53,6 +53,12 @@
             </ul>
         </div>
     </nav>
+
+    <div id="status" class="position-absolute">
+        <i id="loading" class="bi bi-refresh text-white position-absolute pointer on"></i>
+        <i id="success" class="bi bi-check text-success position-absolute"></i>
+        <i id="error"   class="bi bi-x text-danger"></i>
+    </div>
     
     <div id="welcomeMessage" class="alert alert-info m-3 mb-0" role="alert">
         Hi.<br>

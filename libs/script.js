@@ -123,8 +123,13 @@ function events() {
 
             await $.get("cronjob/updateRepositoryData.php?token="+token).then((data) => {
                 let json = JSON.parse(data);
-                if(json.status == 1) { changeStatus("success"); }
-                else { changeStatus("error"); }
+                if(json.status == 1) { 
+                    changeStatus("success"); 
+                    setTimeout(() => { location.reload(); }, 6000);
+                }
+                else {
+                    changeStatus("error");
+                }
             });
             
             setTimeout(changeStatus, 4500, "loading");

@@ -12,7 +12,20 @@ require_once("../functions/repositoryDataHandler.php");
 global $cronjobToken;
 
 if(isset($_GET["token"]) && $_GET["token"] == $cronjobToken) {
-    $repoHandler = new repositoryDataHandler();
-    $repoHandler->updateData();
+    try {
+        $repoHandler = new repositoryDataHandler();
+        $repoHandler->updateData();
+        
+        echo json_encode([
+            "status"    => 1,
+            "message"   => "done"
+        ]);
+    }
+    catch (Exception $e) {
+        repositoryDataHandler::abort(100);
+    }
+}
+else {
+    repositoryDataHandler::abort(100);    
 }
 ?>

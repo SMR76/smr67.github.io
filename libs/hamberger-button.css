@@ -50,7 +50,7 @@
 	transform: rotate(-45deg) translate(25%, -190%);
 }
 
-@media all and (min-width: 991px) {
+@media all and (min-width: 991.98px) {
 	#toggle {
 		visibility: hidden;
 	}

@@ -1,9 +1,10 @@
 @font-face {
-    font-family: fa-brands-400;
-    src: url("../resources/fonts/fa-brands-400.ttf");
+    font-family: fa-solid-900;
+    src: url("../resources/fonts/fa-solid-900.ttf");
     font-display: fallback;
 }
 
+#status             {right: 45px; top: 16px; font-size: 23px; opacity: 0.7;}
 #myRepositories     {padding:50px 0 100px 0;overflow:auto;color: #000000; background-color: #fff;}
 #contactMe          {padding:50px 0 100px 0;overflow:auto;color: #fff; background-color: #424242;}
 
@@ -18,31 +19,38 @@
 #repositories   .row        {margin     : 5px auto; }
 #repositories   div > .row  {text-align : left;     }
 
-@media only screen and (max-width: 768px) {
-    #repositories .row > div:last-child {   padding-top: 5px;}
-}
-
 #contactMe div {
-    position: relative;
-    
+    position: relative;    
     width: 50vw;height: 50vw;
     max-width:  550px;
     max-height: 550px;
 }
 
-#contactMe div a  {position: absolute;}
-#contactMe div img  {filter: grayscale(100%);transition: all 0.5s ease;}
-#contactMe img:hover {filter: grayscale(0%);}
+#contactMe div a            {position: absolute;}
+#contactMe div img          {filter: grayscale(100%);transition: all 0.5s ease;}
+#contactMe img:hover        {filter: grayscale(0%);}
 
-.bi-telegram::before {font-family: fa-brands-400 !important;content: "\f3fe";}
+.bi-refresh::before         {font-family: fa-solid-900 !important; content: "\f021"; opacity: 0; transition: opacity 0.4s ease;}
+.bi-check::before           {font-family: fa-solid-900 !important; content: "\f00c"; opacity: 0; transition: opacity 0.4s ease;}
+.bi-x::before               {font-family: fa-solid-900 !important; content: "\f00d"; opacity: 0; transition: opacity 0.4s ease;}
 
-.bi-instagram:hover::before             {color:#ff6600;}
-.bi-twitter:hover::before               {color:#00a2ff;}
-.bi-linkedin:hover::before              {color:#0051ff;}
-.bi-envelope:hover::before              {color:#ff0000;}
-.bi-telegram:hover::before              {color:#00b7ff;}
-.bi-cup-fill:hover::before              {color:#a55d00;}
-.bi-bookmark-heart-fill:hover::before   {color:#ff004c;}
+.bi-refresh.active::before  {animation: refrot 3s infinite;}
 
-[class*=" bi-"]::before {line-height: 1.1;transition: color 0.5s linear;}
+.bi-refresh.on::before,
+.bi-check.on::before,
+.bi-x.on::before            {opacity: 1;}
 
+.pointer                    {cursor: pointer;}
+
+@keyframes refrot {
+    from {transform: rotateZ(0deg);}
+    to  {transform: rotateZ(720deg);}
+}
+
+@media only screen and (max-width: 991.98px) {
+    #status { right: 85px;}
+}
+
+@media only screen and (max-width: 767.98px) {
+    #repositories .row > div:last-child {   padding-top: 5px;}
+}

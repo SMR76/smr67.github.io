@@ -5,18 +5,18 @@ $(document).ready(() => {
     events();
 });
 
-var cntry = "unknown";
+var country = "unknown";
 async function coffee() {
     try {
         await $.get("https://ipwhois.app/json/").then((data) => {
-            cntry = data.country;
+            country = data.country;
         });
     } catch(e) {
         //error
     }
     let coffeeElement = $("#donate");
     
-    if(cntry === "Iran") {
+    if(country === "Iran") {
         coffeeElement.attr('href','https://idpay.ir/s-m-r');
         coffeeElement.attr('target','_blank');
     }
@@ -85,25 +85,6 @@ function commitRoadHtml(lastCommits, mainBranchUrl) {
 }
 
 function events() {
-    // bookmark button
-    $('#bookmarkMe').click(() => {
-        if (window.sidebar) { // Mozilla Firefox Bookmark
-            window.sidebar.addPanel(location.href,document.title,"");
-            return true;
-        } else if(window.external) { // IE Favorite
-            window.external.AddFavorite(location.href,document.title); 
-            return true;
-        }
-        else if(window.opera && window.print) { // Opera Hotlist
-            var elem = document.createElement('a');
-            elem.setAttribute('href', url);
-            elem.setAttribute('title', title);
-            elem.setAttribute('rel', 'sidebar');
-            elem.click(); //this.title=document.title;
-            return true;
-        }
-    });
-
     // navbar scroll spy
     $("#navbarNavBrand,#navbarNav a").on('click', function (event) {
         if (this.hash !== "") {
@@ -123,14 +104,9 @@ function events() {
         }
     });
 
-    setTimeout(() => {
-        let message = $("#welcomeMessage");
-        message.slideUp();
-    },15000);
-
     // handle donate click
     $("#donate").on('click', function() {
-        if(cntry !== "Iran") {
+        if(country !== "Iran") {
             let tt = $(this).children('p');
             tt.html(`<i class="text-light"> Copied!</i>`);
 
@@ -138,6 +114,37 @@ function events() {
             copyToClipboard(bitcoincashAddress);
         }
     });
+
+    $("#status").on('click',async function() {
+        let token = prompt("Enter the Token:", "");
+
+        if(token) {
+            changeStatus("loading", true);
+
+            await $.get("cronjob/updateRepositoryData.php?token="+token).then((data) => {
+                let json = JSON.parse(data);
+                if(data.status == 1) { changeStatus("success"); }
+                else { changeStatus("error"); }
+            });
+            
+            setTimeout(changeStatus, 4500, "loading");
+        }
+    });
+
+    setTimeout(() => {
+        let message = $("#welcomeMessage");
+        message.slideUp();
+    },15000);
+}
+
+function changeStatus(tagName, active = false) {
+    $("#status").children().removeClass("on");
+    $("#" + tagName).addClass("on");
+    
+    if(active && tagName == "loading")
+        $("#" + tagName).addClass("active");
+    else if(tagName == "loading")
+        $("#" + tagName).removeClass("active");
 }
 
 function copyToClipboard(text) {
@@ -154,4 +161,8 @@ function googleAnalytic() {
     gtag('js', new Date());
 
     gtag('config', 'G-XL9HMP5PK3');
+}
+
+function isTouchDevice() {
+    return (('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0));
 }

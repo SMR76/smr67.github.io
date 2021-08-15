@@ -25,37 +25,26 @@
                 input.removeClass("is-invalid");
             }
         }
+
+        function getData() {
+
+        }        
     </script>
 </head>
 <body>
     <?php
-        include_once("../function-php/accessCode.php");
-        include_once("mirrorLinkHandler.php");
+        include_once("mirrorLink.php");
         
         ini_set('display_errors', 'Off');
         $maxSpace   = 3500000000;
-        $uSpace     = 0;
+        $usedSpace     = 0;
 
         $unvarifiedList = [];
         
         $BASE_URL   = strtok($_SERVER['REQUEST_URI'],'?');
-        $mLinkhandler = new mirrorLinkHandler($_SERVER['SERVER_ADDR'],$gdbUsername,$gdbPass,$maxSpace);
+        $mLinkhandler = new mirrorLinkHandler($_SERVER['SERVER_ADDR'],$maxSpace);
         
-        if (isset($_POST['url'],$_POST['pass']) && $_POST['url'] != '' && $_POST['pass'] != '' ) {
-            list($freeSpace,$uSpace,$filesSize) = $mLinkhandler->calclulateFilesSpace();
-            list($messageKey,$outputName) = $mLinkhandler->createMirrorLink($_POST['url'],$_POST['pass'],$freeSpace);
-
-            $fileList = mirrorLinkHandler::fileList('download/');
-
-            /**
-             * TODO: show unvarified list to admin.
-             * * use ajax.
-             */ 
-            if($mLinkhandler->varifyPassword($_POST['pass']) == 'admin') {
-                $unvarifiedList = $mLinkhandler->getUnvarifiedList(); 
-            }
-        } 
-        else if(isset($_POST['regUsername'],$_POST['regPassword']) 
+        if(isset($_POST['regUsername'],$_POST['regPassword']) 
                     && $_POST['regUsername'] != '' && $_POST['regPassword'] != '' ) {
             
             $username = $_POST['regUsername'];
@@ -122,7 +111,7 @@
                     used space:
                 </div>
                 <div class="col-6 text-right">
-                    <?php echo round($uSpace/1048576,2)."/".round($maxSpace/1048576,2)." MB";?>
+                    <?php echo round($usedSpace/1048576,2)."/".round($maxSpace/1048576,2)." MB";?>
                 </div>
                 <div class="col-12">
                     <div class="progress">
@@ -195,25 +184,23 @@
         </div>
     </div>
 
-    <form  name='upload' method='post' action="<?php echo $BASE_URL; ?>">
-        <div  id="register-modal" class="modal fade" tabindex="-1" role="dialog">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div id="modal-body" class="modal-body container">
-                            <div class="form-group form-inline">
-                                <input type="text"  class="form-control col-6" name="regUsername" placeholder="username" required>
-                                <div class="col-1"></div>
-                                <input type="text"  class="form-control col-5" name="regPassword" placeholder="password" required>
-                            </div>
+    <div  id="register-modal" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div id="modal-body" class="modal-body container">
+                        <div class="form-group form-inline">
+                            <input type="text"  class="form-control col-6" name="regUsername" placeholder="username" required>
+                            <div class="col-1"></div>
+                            <input type="text"  class="form-control col-5" name="regPassword" placeholder="password" required>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">close</button>
-                            <input type="submit"  class="btn btn-info" name="submit" value="apply">
-                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">close</button>
+                        <input type="submit"  class="btn btn-info" name="submit" value="apply">
                     </div>
                 </div>
             </div>
         </div>
-    </form>
+    </div>
 </body>
 </html>

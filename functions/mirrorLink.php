@@ -7,73 +7,34 @@
  */
 
 
-class mirrorLinkHandler {
-    private $serverAddress;
-    private $maxSpace;
-    private $connection;
-    private $DBerror;
+include_once("baseConnector.php");
 
-    public function __construct(
-                            string $serverAddr ,
-                            string $dbUsername,
-                            string $dbPassword,
-                            $maxSpace   = 3500000000,
-                            $servername = 'localhost'
-                        ) {
+class mirrorLink extends baseConnector {
+    private $maxSpace;
+
+    public function __construct(string $serverAddr ,$maxSpace   = 3500000000) {
         // constructor body
+        parent::__construct();
         $this->serverAddress    = $serverAddr;
         $this->maxSpace         = $maxSpace;
-        $this->DBerror          = false;
-
-        $this->connection = new mysqli($servername, $dbUsername, $dbPassword);
-       
-        if( $this->connection->connect_errno || 
-                $this->createDataBase() == false ||
-                    $this->createTable() == false) {          
-
-            $this->DBerror = true;
-            die('- contact with administrator<br>- gmail: seyyedmortezarazavi76@gmail.com');
-        }
         
-        $this->connection->select_db("smrdb");
-    }
 
-    /**
-     * destructor.
-     * close DB connection.
-     */
-    public function __destruct() {
-        $this->connection->close();        
-    }
-
-    private function createDataBase():bool {
-        $result = $this->connection->query("SELECT count(1) FROM information_schema.tables WHERE `TABLE_SCHEMA` = 'smrdb'");
-        if($result) {
-            // if database doesn't exist create it.
-            if($result->fetch_array()[0] == 0) {
-                $cdres = $this->connection->query("CREATE DATABASE `smrdb`");
-                $this->connection->select_db("smrdb");
-            }
-            return true;
+        $result = $this->createTable($this->databaseName,"repositories");
+        if($result !== "") {
+            echo $result;
+            $this->abort(602);
         }
-        return false;
     }
-
-    private function createTable():bool {        
-        $result = $this->connection->query("SELECT count(1) FROM information_schema.tables 
-                                            WHERE `TABLE_SCHEMA` = 'smrdb' 
-                                            and `TABLE_NAME` = 'passwordList'");
-
-        if($result) {
-            // if table doesn't exist create it.
-            if($result->fetch_array()[0] == 0) {
-                $ctres = $this->connection->query("CREATE TABLE `passwordList` (
-                                            `id`            INT PRIMARY KEY AUTO_INCREMENT,
-                                            `password`      VARCHAR(32) NOT NULL,
-                                            `username`      VARCHAR(30) NOT NULL,
-                                            `varified`      BOOLEAN DEFAULT FALSE)");
-            }
-            return true;
+    
+    private function createTable($dbName, $tableName): bool {    
+        // if table does not exist create it.    
+        if($this->tableExist($dbName, $tableName) == false) {    
+            $ctres = $this->connection->query("CREATE TABLE `passwordList` (
+                                        `id`            INT PRIMARY KEY AUTO_INCREMENT,
+                                        `password`      VARCHAR(32) NOT NULL,
+                                        `username`      VARCHAR(30) NOT NULL,
+                                        `varified`      BOOLEAN DEFAULT FALSE)");
+            return $ctres;
         }
         return false;
     }
@@ -90,28 +51,16 @@ class mirrorLinkHandler {
         return null;
     }
 
-    private function varifiedUser(array $varifiedList) {
-        $query = "UPDATE `passwordList` SET varify=TRUE WHERE";
-        $username = next($varifiedList);
-        $query .= "`username`=$username";
-
-        while (($username = next($varifiedList)) !== NULL) {
-            $query .= "or `username`=$username";
-        }        
-
+    public function varifiedUser(array $varified) {
+        $varified = filter_var($varified ,FILTER_SANITIZE_ADD_SLASHES);    
+        $query = "UPDATE `passwordList` SET varify=TRUE WHERE `username`=$varified";
         $result = $this->connection->query($query);
         return $result ;
     }
 
-    private function rejectedUser(array $rejectedList) {
-        $query = "DROP FROM `passwordList` WHERE";
-        $username = next($varifiedList);
-        $query .= "`username`=$username";
-
-        while (($username = next($varifiedList)) !== NULL) {
-            $query .= "or `username`=$username";
-        }        
-
+    public function rejectedUser(string $rejected) {
+        $rejected = filter_var($rejected ,FILTER_SANITIZE_ADD_SLASHES);            
+        $query = "DROP FROM `passwordList` WHERE `username`=$rejected";
         $result = $this->connection->query($query);
         return $result ;
     }
@@ -132,21 +81,16 @@ class mirrorLinkHandler {
      * check if password is true.
      */
     public function varifyPassword($password):?string {
-        $whitelist = array(
-            'localhost',
-            '127.0.0.1',
-            '::1'
-        );
-
+        $whitelist = array('localhost','127.0.0.1','::1');
         if(in_array($this->serverAddress,$whitelist))
             return 'admin';
 
         return $this->dbCheckPassword($password);
     }
 
-    public function addUser(array $user): bool {
-        $username   = $user['username'];
-        $md5pass    = md5($user['password']);
+    public function addUser(string $username, string $password): bool {
+        $username   = filter_var($username,FILTER_SANITIZE_ADD_SLASHES);
+        $md5pass    = md5($password);
         $result     = $this->connection->query("INSERT INTO `passwordlist` VALUES NULL,$username,$md5pass,FALSE)");
         return $result ;
     }
@@ -157,13 +101,8 @@ class mirrorLinkHandler {
 
     public function getUnvarifiedList() {        
         $result = $this->connection->query("SELECT * FROM `passwordList` WHERE `varified` = FALSE");
-        $unvarifiedList = [];
-
         if($result) {
-            while($row = $result->fetch_assoc()) {
-                $unvarifiedList[] = $row;
-            }
-            return $unvarifiedList;
+            return $result->fetch_assoc();
         }        
         return null;
     }

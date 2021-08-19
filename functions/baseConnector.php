@@ -48,7 +48,7 @@ abstract class baseConnector {
     }    
 
     
-    protected function tableExist($dbName, $tableName):bool {   
+    protected function tableExist($dbName, $tableName):bool { 
         $result = $this->connection->query("SELECT count(1) FROM information_schema.tables 
                                             WHERE `TABLE_SCHEMA` = '$dbName' 
                                             and `TABLE_NAME` = '$tableName'");
@@ -58,11 +58,12 @@ abstract class baseConnector {
             return false;
     }
 
-    public static function abort($code = 0) {    
+    public static function abort($code = 0, string $message = "") {    
         die(json_encode([
             "status"    => -1,
             "code"      => $code,
-            "message"   => "contact with website administrator, gmail: seyyedmortezarazavi76@gmail.com"
+            "message"   => $message,
+            "info"      => "contact with website administrator, gmail: seyyedmortezarazavi76@gmail.com"
         ]));
     }
 }

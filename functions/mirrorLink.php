@@ -9,7 +9,7 @@
 
 include_once("baseConnector.php");
 
-class mirrorLink extends baseConnector {
+class mirrorlink extends baseConnector {
     private $maxSpace;
 
     public function __construct(string $serverAddr ,$maxSpace   = 3500000000) {
@@ -25,21 +25,8 @@ class mirrorLink extends baseConnector {
             $this->abort(602);
         }
     }
-    
-    private function createTable($dbName, $tableName): bool {    
-        // if table does not exist create it.    
-        if($this->tableExist($dbName, $tableName) == false) {    
-            $ctres = $this->connection->query("CREATE TABLE `passwordList` (
-                                        `id`            INT PRIMARY KEY AUTO_INCREMENT,
-                                        `password`      VARCHAR(32) NOT NULL,
-                                        `username`      VARCHAR(30) NOT NULL,
-                                        `varified`      BOOLEAN DEFAULT FALSE)");
-            return $ctres;
-        }
-        return false;
-    }
 
-    private function dbCheckPassword($password):?string {
+    public function getUsername($password):?string {
         $md5pass = md5($password);
         $result = $this->connection->query("SELECT * FROM `passwordList` WHERE `password` = '$md5pass'");
 
@@ -48,7 +35,15 @@ class mirrorLink extends baseConnector {
                 return $row['username'];
             }
         }
-        return null;
+        return "";
+    }
+
+    /** 
+     * 
+     * check if password is correct.
+     */
+    public function varifyPassword($password):bool {
+        return $this->getUsername($password) !== "";
     }
 
     public function varifiedUser(array $varified) {
@@ -63,29 +58,6 @@ class mirrorLink extends baseConnector {
         $query = "DROP FROM `passwordList` WHERE `username`=$rejected";
         $result = $this->connection->query($query);
         return $result ;
-    }
-
-    private function isFileExist(string $newFileName):bool {
-        $dir = 'download/';
-        $fileList = glob($dir.'*.*');
-        foreach($fileList as $file) {
-            if($newFileName == substr($file,strpos($file, "-") + 1))
-                return true;
-        }
-        return false;
-    }
-
-    /** 
-     * @return string|null username.
-     * 
-     * check if password is true.
-     */
-    public function varifyPassword($password):?string {
-        $whitelist = array('localhost','127.0.0.1','::1');
-        if(in_array($this->serverAddress,$whitelist))
-            return 'admin';
-
-        return $this->dbCheckPassword($password);
     }
 
     public function addUser(string $username, string $password): bool {
@@ -112,23 +84,19 @@ class mirrorLink extends baseConnector {
     }
 
     /**
-     * @return array($remainedSpace, $usedSpace, $filesSize);
-     * calulate free space in host and return max and free space and files size array.
+     * @return $usedSpace;
+     * calulate free space in server and return used space.
      */
-    public function calclulateFilesSpace() {
+    public function calculateUsedSpace():int {
         $usedSpace = 0;
-        $filesSize = [];
         if(file_exists('download/')) {
             foreach(glob('download/*.*') as $file) {
                 $fs = filesize($file);
-                $filesSize[] = ($fs/$this->maxSpace)*100;
-                
                 $usedSpace += $fs;
             }
-        }    
-        $remainedSpace = $this->maxSpace - $usedSpace;
+        }
 
-        return array($remainedSpace, $usedSpace, $filesSize);
+        return $usedSpace;
     }
 
     /** 
@@ -242,9 +210,38 @@ class mirrorLink extends baseConnector {
      * @return array 
      * list of file names.
      */
-    public static function fileList($dir) {
-        $fileList = glob($dir.'*.*');
-        return $fileList;
+    public static function fileList($root) {
+        $glob   = glob($root.'*.*');
+        $files  = [];
+
+        foreach($glob as $file) {
+            $files[] = ["name" => $file, "size" => filesize($file)];
+        }
+
+        return $files;
+    }
+    
+    private function createTable($dbName, $tableName): bool {    
+        // if table does not exist create it.    
+        if($this->tableExist($dbName, $tableName) == false) {    
+            $ctres = $this->connection->query("CREATE TABLE `passwordList` (
+                                        `id`            INT PRIMARY KEY AUTO_INCREMENT,
+                                        `password`      VARCHAR(32) NOT NULL,
+                                        `username`      VARCHAR(30) NOT NULL,
+                                        `varified`      BOOLEAN DEFAULT FALSE)");
+            return $ctres;
+        }
+        return false;
+    }
+
+    private function isFileExist(string $newFileName):bool {
+        $root       = 'download/';
+        $fileList   = glob($root.'*.*');
+        foreach($fileList as $file) {
+            if($newFileName == substr($file,strpos($file, "-") + 1))
+                return true;
+        }
+        return false;
     }
 }
 ?>

@@ -19,18 +19,17 @@ class mirrorlink extends baseConnector {
         $this->maxSpace         = $maxSpace;
         
 
-        $result = $this->createTable($this->databaseName,"repositories");
-        if($result !== "") {
-            echo $result;
-            $this->abort(602);
+        $result = $this->createTable($this->databaseName,"passwordlist");
+        if($result === true) {
+            $this->abort(602,$this->connection->error);
         }
     }
 
-    public function getUsername($password):?string {
+    public function getUsername(string $password):?string {
         $md5pass = md5($password);
-        $result = $this->connection->query("SELECT * FROM `passwordList` WHERE `password` = '$md5pass'");
+        $result = $this->connection->query("SELECT * FROM `passwordlist` WHERE `password` = '$md5pass'");
 
-        if($result) {
+        if($result) {            
             if($row = $result->fetch_assoc()) {
                 return $row['username'];
             }
@@ -48,14 +47,14 @@ class mirrorlink extends baseConnector {
 
     public function varifiedUser(array $varified) {
         $varified = filter_var($varified ,FILTER_SANITIZE_ADD_SLASHES);    
-        $query = "UPDATE `passwordList` SET varify=TRUE WHERE `username`=$varified";
+        $query = "UPDATE `passwordlist` SET varify=TRUE WHERE `username`=$varified";
         $result = $this->connection->query($query);
         return $result ;
     }
 
     public function rejectedUser(string $rejected) {
         $rejected = filter_var($rejected ,FILTER_SANITIZE_ADD_SLASHES);            
-        $query = "DROP FROM `passwordList` WHERE `username`=$rejected";
+        $query = "DROP FROM `passwordlist` WHERE `username`=$rejected";
         $result = $this->connection->query($query);
         return $result ;
     }
@@ -72,7 +71,7 @@ class mirrorlink extends baseConnector {
     }
 
     public function getUnvarifiedList() {        
-        $result = $this->connection->query("SELECT * FROM `passwordList` WHERE `varified` = FALSE");
+        $result = $this->connection->query("SELECT * FROM `passwordlist` WHERE `varified` = FALSE");
         if($result) {
             return $result->fetch_assoc();
         }        
@@ -103,12 +102,17 @@ class mirrorlink extends baseConnector {
      * @return string 
      * create a mirror link from given URL.
      */
-    public function createMirrorLink(string $url,string $password,int $remainedSpace) {
+    public function createMirrorLink(string $url,string $password) {
         $url = filter_var($url , FILTER_SANITIZE_URL);
         $len = strlen($url);
+        $usedSpace      = $this->calculateUsedSpace();
+        $remainedSpace  = $this->getMaxSpace() - $usedSpace;
     
         if($this->varifyPassword($password) != null && 3 < $len && $len < 256) {
 
+            /**
+             * create download folder on 0777 mode.
+             */
             if (!file_exists('download/')) {
                 mkdir('download/', 0777, true);
             }
@@ -215,7 +219,7 @@ class mirrorlink extends baseConnector {
         $files  = [];
 
         foreach($glob as $file) {
-            $files[] = ["name" => $file, "size" => filesize($file)];
+            $files[] = ["name" => basename($file), "size" => filesize($file)];
         }
 
         return $files;
@@ -224,7 +228,7 @@ class mirrorlink extends baseConnector {
     private function createTable($dbName, $tableName): bool {    
         // if table does not exist create it.    
         if($this->tableExist($dbName, $tableName) == false) {    
-            $ctres = $this->connection->query("CREATE TABLE `passwordList` (
+            $ctres = $this->connection->query("CREATE TABLE `$tableName` (
                                         `id`            INT PRIMARY KEY AUTO_INCREMENT,
                                         `password`      VARCHAR(32) NOT NULL,
                                         `username`      VARCHAR(30) NOT NULL,

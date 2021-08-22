@@ -7,57 +7,59 @@
 
 include_once("mirrorlink.php");
 
-ini_set('display_errors', 'Off');
+//ini_set('display_errors', 'Off');
+header('Access-Control-Allow-Origin: *');
 session_start();
 
-// svae password in session.
+// save password in session.
 if(isset($_POST['pass'])) {
-    $pass       = isset($_POST['pass']);
+    $pass       = $_POST['pass'] ;
     $mirrorlink = new mirrorlink($_SERVER['SERVER_ADDR']);
     if($mirrorlink->varifyPassword($pass) == true) {
         $_SESSION['pass'] = $pass;
-        echo json_encode(["status" => 200]);
+        session_write_close();
+        echo json_encode(["status" => 1]);
     } else {
         mirrorlink::abort(502, "incorrect password");
     }
 } // use password in session and given URL.
 else if(isset($_SESSION ['pass'])) {
     $pass       = $_SESSION['pass'];
+    $mirrorlink = new mirrorlink($_SERVER['SERVER_ADDR'], 3500000000);
     
-    if($_POST['url']) {
-        $unvarifiedList = [];
+    if(isset($_POST['url'])) {
         $url        = $_POST['url'];
-        $mirrorlink = new mirrorlink($_SERVER['SERVER_ADDR'], 3500000000);
-
-        $usedSpace  = $mirrorlink->calculateUsedSpace();
-        $freeSpace  = $mirrorlink->getMaxSpace() - $usedSpace;
-        list($messageKey,$output) = $mirrorlink->createMirrorLink($url,$pass,$freeSpace);
+        list($messageKey,$output) = $mirrorlink->createMirrorLink($url,$pass);
 
         echo json_encode( [
-                "status"            => 201,
-                "usedSpace"         => $usedSpace,
+                "status"            => 1,
                 "output"            => $output
             ]
         );
     }
-    else if(isset($_GET['getUnvarifiedList']) && $_GET['getUnvarifiedList'] == true) {
+    else if(isset($_POST['getUnvarifiedList'])) {
         if($mirrorlink->getUsername($pass) == 'admin') {
             echo json_encode([
-                "status"            =>  201,
+                "status"            =>  1,
                 "unvarifiedList"    =>  $mirrorlink->getUnvarifiedList()
+            ]);
+        } else {            
+            echo json_encode([
+                "status"            =>  0,
+                "message"           => "unaccessible"
             ]);
         }
     }
-    else if(isset($_GET['getFiles'])) {
-        $fileList = mirrorlink::fileList('download/');
+    else if(isset($_POST['getFiles'])) {
+        $fileList = mirrorlink::fileList('../pages/download/');
         echo json_encode([
-            "status"            =>  201,
-            "currentFiles"    =>  $mirrorlink->getUnvarifiedList()
+            "status"            =>  1,
+            "files"      =>  $fileList
         ]);
     }
 }  
 else { 
-    mirrorlink::abort(503, "no session password exist.");
+    mirrorlink::abort(503, "no session password exist");
 }
 
 ?>

@@ -10,7 +10,8 @@ include_once("accessCode.php");
 abstract class baseConnector {
     protected $connection;      
     protected $DBerror;
-    protected $databaseName;
+    protected string $databaseName;
+    protected string $baseUrl;
 
     function __construct() {
         global $gdbUsername;
@@ -18,6 +19,7 @@ abstract class baseConnector {
         global $gdbName;
 
         $this->databaseName = $gdbName;
+        $this->baseUrl      = dirname(__FILE__)."/../";
 
         $this->connection = new mysqli('localhost', $gdbUsername, $gdbPass);
         

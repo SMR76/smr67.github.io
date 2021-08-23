@@ -7,7 +7,7 @@
 
 include_once("mirrorlink.php");
 
-//ini_set('display_errors', 'Off');
+ini_set('display_errors', 'Off');
 header('Access-Control-Allow-Origin: *');
 session_start();
 
@@ -29,10 +29,10 @@ else if(isset($_SESSION ['pass'])) {
     
     if(isset($_POST['url'])) {
         $url        = $_POST['url'];
-        list($messageKey,$output) = $mirrorlink->createMirrorLink($url,$pass);
+        list($status ,$output) = $mirrorlink->createMirrorLink($url,$pass);
 
         echo json_encode( [
-                "status"            => 1,
+                "status"            => $status,
                 "output"            => $output
             ]
         );
@@ -53,8 +53,20 @@ else if(isset($_SESSION ['pass'])) {
     else if(isset($_POST['getFiles'])) {
         $fileList = mirrorlink::fileList('../pages/download/');
         echo json_encode([
-            "status"            =>  1,
-            "files"      =>  $fileList
+            "status"        =>  1,
+            "files"         =>  $fileList,
+            "maxSpace"      =>  $mirrorlink->getMaxSpace()
+        ]);
+    }
+    else if(isset($_POST['removeFile'], $_POST['name'])) {
+        $resutl = $mirrorlink->removeFile($_POST['name'], $pass);
+        echo json_encode([
+            "status"        =>  $resutl ? 1 : -1,
+        ]); 
+    }
+    else if(isset($_POST['checkSession'])) {
+        echo json_encode([
+            "status"        =>  1,
         ]);
     }
 }  

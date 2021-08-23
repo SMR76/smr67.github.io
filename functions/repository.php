@@ -8,7 +8,7 @@
 
 include_once("baseConnector.php");
 
-class repositoryDataHandler extends baseConnector {
+class repository extends baseConnector {
     private $context;
 
     function __construct() {

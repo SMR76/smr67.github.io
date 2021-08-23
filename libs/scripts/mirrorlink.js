@@ -24,7 +24,7 @@ $(document).ready(() => {
 
 function removeFile(filename) {
     let promise = new Promise((resolve, reject) => {
-        $.post('../functions/mirrorLinkAjax.php', { removeFile: true, name : filename}
+        $.post('../functions/mirrorlinkAjax.php', { removeFile: true, name : filename}
         ).done(function (response) {
             let json = JSON.parse(response);
             if (json.status == 1) {
@@ -40,7 +40,7 @@ function removeFile(filename) {
 
 function hasSession() {
     let promise = new Promise((resolve, reject) => {
-        $.post('../functions/mirrorLinkAjax.php', {checkSession : true} 
+        $.post('../functions/mirrorlinkAjax.php', {checkSession : true} 
         ).done(function(response) {
             let json = JSON.parse(response);
             if(json.status == 1)
@@ -88,7 +88,7 @@ function validateUrls() {
 function login() {
     let pass = prompt("Enter your password:");
     let promise = new Promise((resolve, reject) => {
-        $.post('../functions/mirrorLinkAjax.php', { pass: pass }
+        $.post('../functions/mirrorlinkAjax.php', { pass: pass }
         ).done(function (response) {
             let json = JSON.parse(response);
             if (json.status == 1) {
@@ -122,7 +122,7 @@ function downloadRequest() {
             progressContainer.append(progress);
             progresses.push(progress);
             try {
-                $.post('../functions/mirrorLinkAjax.php', { url: url, idx : index++}
+                $.post('../functions/mirrorlinkAjax.php', { url: url, idx : index++}
                 ).done(function(response) {
                     let idx     = parseInt(this.data.match(/(?<=idx=)\d/)[0]);
                     let json    = JSON.parse(response);
@@ -148,7 +148,7 @@ function downloadRequest() {
 }
 
 function getUnvarifiedList() {
-    $.post('../functions/mirrorLinkAjax.php', { getUnvarifiedList: true }
+    $.post('../functions/mirrorlinkAjax.php', { getUnvarifiedList: true }
     ).done(function (response) {
         let json = JSON.parse(response);
         if (json.status == 1) {
@@ -162,7 +162,7 @@ function getUnvarifiedList() {
 function register() {
     let username = $("#regUsername").val();
     let password = $("#regPassword").val();
-    $.post('../functions/mirrorLinkAjax.php', { username: username, password : password}
+    $.post('../functions/mirrorlinkAjax.php', { username: username, password : password}
     ).done(function (response) {
         let json = JSON.parse(response);
         if (json.status == 1) {
@@ -174,7 +174,7 @@ function register() {
 function getFiles() {
     let promise = new Promise((resolve, reject) => {
 
-        $.post('../functions/mirrorLinkAjax.php', { getFiles: true }
+        $.post('../functions/mirrorlinkAjax.php', { getFiles: true }
         ).done(function (response) {
             const json = JSON.parse(response);
             let progressContainer   = $("#progress-container");

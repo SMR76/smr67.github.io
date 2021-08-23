@@ -32,7 +32,7 @@ async function coffee() {
 }
 
 async function repositories() {
-    let url = "functions/repositoryDataAjax.php";
+    let url = "functions/repositoryAjax.php";
     let rpositoriesContainer = $("#repositories");
 
     let oddCol = 0;

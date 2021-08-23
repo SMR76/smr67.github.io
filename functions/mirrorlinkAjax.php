@@ -9,7 +9,7 @@ include_once("mirrorlink.php");
 
 ini_set('display_errors', 'Off');
 header('Access-Control-Allow-Origin: *');
-session_start();
+//session_start();
 
 // save password in session.
 if(isset($_POST['pass'])) {

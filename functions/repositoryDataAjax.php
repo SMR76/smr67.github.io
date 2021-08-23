@@ -11,7 +11,7 @@
 header('Access-Control-Allow-Origin: *');
 
 //* include repository data api.
-include_once("repositoryData.php");
+include_once("repository.php");
 
-$repoDataHandler = new repositoryDataHandler();
+$repoDataHandler = new repository();
 echo $repoDataHandler->getRpositoriesAsJson();

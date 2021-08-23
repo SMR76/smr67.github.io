@@ -7,13 +7,13 @@
  * cronjob.
  */
 
-require_once("../functions/repositoryDataHandler.php");
+require_once("../functions/repository.php");
 
 global $cronjobToken;
 
 if(isset($_GET["token"]) && $_GET["token"] == $cronjobToken) {
     try {
-        $repoHandler = new repositoryDataHandler();
+        $repoHandler = new repository();
         $repoHandler->updateData();
         
         echo json_encode([
@@ -22,10 +22,10 @@ if(isset($_GET["token"]) && $_GET["token"] == $cronjobToken) {
         ]);
     }
     catch (Exception $e) {
-        repositoryDataHandler::abort(98);
+        repository::abort(98);
     }
 }
 else {
-    repositoryDataHandler::abort(99);    
+    repository::abort(99);    
 }
 ?>

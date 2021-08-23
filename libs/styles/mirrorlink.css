@@ -1,0 +1,10 @@
+#urls               {min-height: 15px; resize:none;}
+.delete-file        {cursor: pointer;}
+.delete-file:hover  {color: #ff4242;}
+
+@media (min-width: 576px) {
+    .rounded-sm-left {
+        border-top-left-radius: .25rem!important;
+        border-bottom-left-radius: .25rem!important;
+    }
+}

@@ -9,27 +9,14 @@
     <link rel="stylesheet" href="../resources/fonts/bootstrap-font/bootstrap-icons.css"/>
     <link rel="stylesheet" href="../libs/bootstrap-4.5.0-dist/css/bootstrap.min.css"/>
     <link rel="stylesheet" href="../libs/hamberger-button.css"/>
+    <link rel="stylesheet" href="../libs/styles/mirrorlink.css"/>
+    <link rel="stylesheet" href="../libs/styles/ring-loader.css"/>
     
     <script type="text/javascript" src="../libs/jquery/3.5.1/jquery-3.5.1.min.js"></script>
     <script type="text/javascript" src="../libs/bootstrap-4.5.0-dist/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../libs/hamberger-button.js"></script>
-    
-    <script>
-        function urlKeyup(obj) {
-            let div = $('#charCount')
-            let input = $(obj)
-            div.html(obj.value.length + '/256');
-            if(obj.value.length >= 256) {
-                input.addClass("is-invalid");
-            } else {
-                input.removeClass("is-invalid");
-            }
-        }
+    <script type="text/javascript" src="../libs/scripts/mirrorlink.js"></script>
 
-        function getData() {
-
-        }        
-    </script>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -53,7 +40,7 @@
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" onclick="$('#register-modal').modal('show');">
-                        Get Verification
+                        Register
                     </a>
                 </li>
             </ul>
@@ -62,81 +49,67 @@
 
     <div class="container w-75 pt-5 pb-5">
         <div class="form-group">
-            message
+            <span  id="message" class="p-2 rounded" >message</span>            
         </div>
         <div class="form-group">
-            <label for="url" class="text-dark">file url:</label>
-            <div class="form-inline">
-                <input type="text"  class="form-control col-10" name="url" id="url" aria-describedby="helpId" placeholder="file url on web. e.g. https://example.com/file." onkeyup="urlKeyup(this);" required>
-                <small id="charCount" class="form-text  col-2 text-muted text-right">0/256</small>
-            </div>
-            <small id="helpId" class="form-text text-muted">
-                enter url of your desired file.
-            </small>
-        </div>
-                
-        <div class="row mb-4">
-            <div class="col-6">
-                used space:
-            </div>
-            <div class="col-6 text-right">
-                0/0 MB
-            </div>
-            <div class="col-12">
-                <div class="progress">
-                    <div class='progress-bar' role='progressbar' style='width: 0px; background-color: hsl(0, 100%, 80%);'>size</div>
-                </div>
+            <label for="urls" class="text-dark">URLs:</label>
+
+            <textarea id="urls" rows="2" name="urls" class="form-control" aria-describedby="helpId" placeholder="URLs (e.g. https://example.com/file)." required></textarea>                
+
+            <div class="row">
+                <small id="helpId" class="form-text text-muted col-6">
+                    Enter URLs one per line.
+                </small>
+                <small id="charCount" class="form-text text-muted text-right col-6">
+                    0 ch<br> 0 ln
+                </small>
             </div>
         </div>
 
-        <div class="form-inline">
-            <label for="pass" class="col-12 col-sm-3 align-content-start">password: </label>
-            <input type="password"  class="form-control col-12 col-sm-9" name="pass" id="pass">
-        </div>
         <div class="form-group text-right mt-3">
             <input class="btn btn-light" type="submit" value="Upload" id='submit' name='submit'>
         </div>
-        <!-- <div class='form-group text-info text-center small mt-3'>
-            here is your file link.<br>
-            $outputName<br>
-            <a  href='$outputName' class='mt-4 btn btn-dark' download='$basename'>
-                Download file
-            </a>
-        </div> -->
-
-        <div class='container-fluid'>
-            <div class="row">
+        
+        <div class='container-fluid p-0 mt-3'>               
+            <div class="row mb-2">
+                <div class="col-6">
+                    Used space:
+                </div>
+                <div id="remained-size" class="col-6 text-right">
+                    0/0 MB
+                </div>
                 <div class="col-12">
-                    current links:
+                    <div id="progress-container" class="progress"></div>
                 </div>
             </div>
-            <!-- <div class='row mt-1 rounded bg-light'>
-                <div    class='col-2 rounded-left text-secondary' 
-                        style='background-color: hsl($color, 100%, 95%);'>
-                    $id
+
+            <div class="row">
+                <div class="col-12">
+                    Current links:
                 </div>
-                <div class='col-10'>
-                    <a  class='text-secondary text-decoration-none' href = '$file'>
-                        $baseName
-                    </a>
-                </div>
-            </div> -->
+            </div>
         </div>
+
+        <div id="links-container" class='container-fluid'> 
+            -
+        </div>
+
+        <div id="download-process" class='container mt-3'></div>
     </div>
 
     <div  id="register-modal" class="modal fade" tabindex="-1" role="dialog">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div id="modal-body" class="modal-body container">
-                        <div class="form-group form-inline">
-                            <input type="text"  class="form-control col-6" name="regUsername" placeholder="username" required>
+                        <div class="row form-inline p-3">
+                            <input id="regUsername" name="regUsername" type="text" class="form-control col-6" placeholder="username" required>
                             <div class="col-1"></div>
-                            <input type="text"  class="form-control col-5" name="regPassword" placeholder="password" required>
+                            <input id="regPassword" name="regPassword" type="text" class="form-control col-5" placeholder="password" required>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">close</button>
-                        <input type="submit"  class="btn btn-info" name="submit" value="apply">
+                        <input id="register" name="register" type="submit"  class="btn btn-info" data-dismiss="modal" value="apply">
                     </div>
                 </div>
             </div>

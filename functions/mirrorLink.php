@@ -1,7 +1,7 @@
 <?php 
 /**
  * @author SMR
- * @version 0.3.0
+ * @version 1.0.0
  * @copyright LGPLv3
  * @package dev
  */
@@ -11,12 +11,14 @@ include_once("baseConnector.php");
 
 class mirrorlink extends baseConnector {
     private $maxSpace;
+    private $downloadDir;
 
     public function __construct(string $serverAddr ,$maxSpace   = 3500000000) {
         // constructor body
         parent::__construct();
         $this->serverAddress    = $serverAddr;
         $this->maxSpace         = $maxSpace;
+        $this->downloadDir    = $this->baseUrl.'pages/download/';
         
 
         $result = $this->createTable($this->databaseName,"passwordlist");
@@ -88,8 +90,8 @@ class mirrorlink extends baseConnector {
      */
     public function calculateUsedSpace():int {
         $usedSpace = 0;
-        if(file_exists('download/')) {
-            foreach(glob('download/*.*') as $file) {
+        if(file_exists($this->baseUrl.'pages/download/')) {
+            foreach(glob($this->baseUrl.'pages/download/*.*') as $file) {
                 $fs = filesize($file);
                 $usedSpace += $fs;
             }
@@ -108,24 +110,23 @@ class mirrorlink extends baseConnector {
         $usedSpace      = $this->calculateUsedSpace();
         $remainedSpace  = $this->getMaxSpace() - $usedSpace;
     
-        if($this->varifyPassword($password) != null && 3 < $len && $len < 256) {
-
+        if($this->varifyPassword($password) != null && 3 < $len && $len < 512) {
             /**
              * create download folder on 0777 mode.
              */
-            if (!file_exists('download/')) {
-                mkdir('download/', 0777, true);
+            if (!file_exists($this->downloadDir)) {
+                mkdir($this->downloadDir, 0777, true);
             }
 
-            if($this->isFileExist(basename($url)) == true)
-                return array('repetitive',null);
+            if($this->isFileExist($this->downloadDir, basename($url)) == true)
+                return array(-102, null); //repetative
             
             /**
-             * validate  $url
+             * validate  $urlEXE.
              */
-            if (filter_var($url, FILTER_VALIDATE_URL) == TRUE && $this->endsWith($url, ["php","sh","exe","html","js"]) == FALSE) {
+            if (filter_var($url, FILTER_VALIDATE_URL) == TRUE && $this->endsWith($url, ["php","sh","html","js","py","SCR","PDF","VBS","RTF","DOC","XLS",]) == FALSE) {
                 $hash = bin2hex(random_bytes(4));
-                $outputName = "download/$hash-".basename($url);
+                $outputName = $this->downloadDir."$hash-".basename($url);
     
     
                 $fileSize = $this->urlFileSize($url);
@@ -136,32 +137,17 @@ class mirrorlink extends baseConnector {
                     if ( $fp ) {
                         file_put_contents($outputName, $fp);    //write content to the file.
                         fclose($fp);                            //close file.
-                        chmod($outputName, 0444);               //change file permission
+                        chmod($outputName, 0744);               //change file permission
                         
-                        return array('downloaded',$outputName);
+                        return array(1 , basename($outputName)); //downloaded
                     }
                     else {
-                        return array('notFound',null);
+                        return array(-100, null); //file not found
                     }
                 }
             }
         }
-        return array('invalid',null);
-    }
-
-    
-    /**
-     * @return status message.
-     */
-    public static function statusMessage(string $status) {
-        $messageArray = [
-            'downloaded'    => "<div class='alert alert-success' role='alert'>Ready to download.</div>",
-            'repetitive'    => "<div class='alert alert-info' role='alert'>The file alrady exist.</div>",
-            'notFound'      => "<div class='alert alert-warrning' role='alert'>Download intrupted.</div>",
-            'invalid'       => "<div class='alert alert-danger' role='alert'>Invalid url or password.</div>"
-        ];
-
-        return $messageArray[$status];
+        return array(-101, null); //invalid
     }
 
     /**
@@ -170,7 +156,7 @@ class mirrorlink extends baseConnector {
     public static function endsWith(string $string, array $subStrs ) {
         foreach($subStrs as $subStr) {
             $length = strlen( $subStr );
-            if($length && substr( $string, -$length ) === $subStr)
+            if($length && strtolower(substr( $string, -$length )) === strtolower( $subStr ))
                 return true;
         }
         return false;
@@ -224,6 +210,17 @@ class mirrorlink extends baseConnector {
 
         return $files;
     }
+    /** 
+     * @return bool 
+     * remove file.
+     */
+    public function removeFile($fileName, $password) {
+        if($this->getUsername($password) == 'admin') {
+            unlink($this->downloadDir.$fileName);
+            return true;
+        }
+        return false;
+    }
     
     private function createTable($dbName, $tableName): bool {    
         // if table does not exist create it.    
@@ -238,8 +235,7 @@ class mirrorlink extends baseConnector {
         return false;
     }
 
-    private function isFileExist(string $newFileName):bool {
-        $root       = 'download/';
+    private function isFileExist(string $root, string $newFileName):bool {
         $fileList   = glob($root.'*.*');
         foreach($fileList as $file) {
             if($newFileName == substr($file,strpos($file, "-") + 1))

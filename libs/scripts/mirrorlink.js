@@ -2,7 +2,7 @@ $(document).ready(() => {
 
     let gFile = function() { getFiles().then(deleteFilesEvent);}   
      
-    hasSession().reject( function() {
+    hasSession().catch( function() {
         login().then(gFile)
     });
 

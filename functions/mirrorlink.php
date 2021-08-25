@@ -31,7 +31,7 @@ class mirrorlink extends baseConnector {
         $md5pass = md5($password);
         $result = $this->connection->query("SELECT * FROM `passwordlist` WHERE `password` = '$md5pass'");
 
-        if($result) {            
+        if($result) {
             if($row = $result->fetch_assoc()) {
                 return $row['username'];
             }
@@ -47,24 +47,23 @@ class mirrorlink extends baseConnector {
         return $this->getUsername($password) !== "";
     }
 
-    public function varifiedUser(array $varified) {
-        $varified = filter_var($varified ,FILTER_SANITIZE_ADD_SLASHES);    
-        $query = "UPDATE `passwordlist` SET varify=TRUE WHERE `username`=$varified";
-        $result = $this->connection->query($query);
+    public function varifyUser(int $id): bool {
+        $query      = "UPDATE `passwordlist` SET `varified`=TRUE WHERE `id`='$id'";
+        $result     = $this->connection->query($query);
         return $result ;
     }
 
-    public function rejectedUser(string $rejected) {
-        $rejected = filter_var($rejected ,FILTER_SANITIZE_ADD_SLASHES);            
-        $query = "DROP FROM `passwordlist` WHERE `username`=$rejected";
-        $result = $this->connection->query($query);
+    public function rejectUser(int $id): bool {
+        $result     = $this->connection->query("DROP `passwordlist` WHERE `id`= '$id'");
         return $result ;
     }
 
     public function addUser(string $username, string $password): bool {
         $username   = filter_var($username,FILTER_SANITIZE_ADD_SLASHES);
         $md5pass    = md5($password);
-        $result     = $this->connection->query("INSERT INTO `passwordlist` VALUES NULL,$username,$md5pass,FALSE)");
+        $result     = $this->connection->query("INSERT INTO `passwordlist` VALUES (NULL,'$md5pass','$username',FALSE)");
+        echo $this->connection->error;
+
         return $result ;
     }
 
@@ -73,9 +72,9 @@ class mirrorlink extends baseConnector {
     }
 
     public function getUnvarifiedList() {        
-        $result = $this->connection->query("SELECT * FROM `passwordlist` WHERE `varified` = FALSE");
+        $result = $this->connection->query("SELECT `id`,`username` FROM `passwordlist` WHERE `varified` = FALSE");
         if($result) {
-            return $result->fetch_assoc();
+            return $result->fetch_all(MYSQLI_ASSOC);
         }        
         return null;
     }

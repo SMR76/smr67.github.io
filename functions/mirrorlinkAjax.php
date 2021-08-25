@@ -44,12 +44,22 @@ if(isset($_POST['password'], $_POST['username'])) {
         mirrorlink::abort(502, "incorrect password");
     }
 } // use password in session and given URL.
-else if(isset($_SESSION ['password'])) {
-    $password   = $_SESSION['password'];
-    $username   = $_SESSION['username'];
-
+else if(isset($_SESSION ['password']) || isset($_POST['newUsername'])) {
 
     $mirrorlink = new mirrorlink($_SERVER['SERVER_ADDR'], 3500000000);
+    
+    if(isset($_POST['newUsername'])) {
+        $result = $mirrorlink->addUser($_POST['newUsername'],$_POST['newPassword']);
+        if($result) {
+            echo json_encode(["status"        =>  1]);
+        } else {
+            mirrorlink::abort(606, "can't add user");
+        }
+        die();
+    }
+
+    $password   = $_SESSION['password'];
+    $username   = $_SESSION['username'];
     
     if($mirrorlink->varifyPassword($username, $password) == false) {
         unset($_SESSION['password'],$_SESSION['username']);
@@ -67,7 +77,7 @@ else if(isset($_SESSION ['password'])) {
     }
     else if(isset($_POST['getUnvarifiedList'])) {
 
-        if($mirrorlink->getUsername($password) == 'admin') {
+        if($mirrorlink->getUsername('admin') == md5($password)) {
             echo json_encode([
                 "status"            =>  1,
                 "unvarifiedList"    =>  $mirrorlink->getUnvarifiedList()
@@ -112,14 +122,6 @@ else if(isset($_SESSION ['password'])) {
             echo json_encode(["status"        =>  1]);
         } else {
             mirrorlink::abort(611);
-        }
-    }
-    else if(isset($_POST['newUsername'],$_POST['newPassword'])) {
-        $result = $mirrorlink->addUser($_POST['newUsername'],$_POST['newPassword']);
-        if($result) {
-            echo json_encode(["status"        =>  1]);
-        } else {
-            mirrorlink::abort(606, "can't add user");
         }
     }
     else {

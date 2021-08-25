@@ -7,14 +7,30 @@
 
 include_once("mirrorlink.php");
 
-ini_set('display_errors', 'Off');
+//ini_set('display_errors', 'Off');
 header('Access-Control-Allow-Origin: *');
 session_start();
+
+/**
+ * To prevent spamming or brute forces.
+ * A timer to limit 100 request in 1 hour for every session. 
+ */
+if(isset($_SESSION['req']['timer']) == false || time() - $_SESSION['req']['timer'] > 3600) {
+    $_SESSION['req']['timer'] = time();
+    $_SESSION['req']['count'] = 0;
+}
+
+if($_SESSION['req']['count'] < 500) {
+    $_SESSION['req']['count']++;
+} else {
+    mirrorlink::abort(-1, "request limit exceeded");;
+}
 
 // save password in session.
 if(isset($_POST['pass'])) {
     $pass       = $_POST['pass'] ;
     $mirrorlink = new mirrorlink($_SERVER['SERVER_ADDR']);
+
     if($mirrorlink->varifyPassword($pass) == true) {
         $_SESSION['pass'] = $pass;
         session_write_close();
@@ -38,6 +54,7 @@ else if(isset($_SESSION ['pass'])) {
         );
     }
     else if(isset($_POST['getUnvarifiedList'])) {
+
         if($mirrorlink->getUsername($pass) == 'admin') {
             echo json_encode([
                 "status"            =>  1,
@@ -52,6 +69,7 @@ else if(isset($_SESSION ['pass'])) {
     }
     else if(isset($_POST['getFiles'])) {
         $fileList = mirrorlink::fileList('../pages/download/');
+
         echo json_encode([
             "status"        =>  1,
             "files"         =>  $fileList,
@@ -60,18 +78,43 @@ else if(isset($_SESSION ['pass'])) {
     }
     else if(isset($_POST['removeFile'], $_POST['name'])) {
         $resutl = $mirrorlink->removeFile($_POST['name'], $pass);
-        echo json_encode([
-            "status"        =>  $resutl ? 1 : -1,
-        ]); 
+
+        if($result) {
+            echo json_encode(["status"        =>  1]);
+        } else {
+            mirrorlink::abort(-302);
+        }
     }
     else if(isset($_POST['checkSession'])) {
-        echo json_encode([
-            "status"        =>  1,
-        ]);
+        echo json_encode(["status"        =>  1]);
+    }
+    else if(isset($_POST['useraction'],$_POST['userId'])) {
+
+        if($_POST['useraction'] == 'accept') {
+            $result = $mirrorlink->varifyUser($_POST['userId']);
+        } else {
+            $result = $mirrorlink->varifyUser($_POST['userId']);
+        }
+
+        if($result) {
+            echo json_encode(["status"        =>  1]);
+        } else {
+            mirrorlink::abort(611);
+        }
+    }
+    else if(isset($_POST['newUsername'],$_POST['newPassword'])) {
+        $result = $mirrorlink->addUser($_POST['newUsername'],$_POST['newPassword']);
+        if($result) {
+            echo json_encode(["status"        =>  1]);
+        } else {
+            mirrorlink::abort(606, "can't add user");
+        }
+    }
+    else {
+        mirrorlink::abort(504, "no valid parameter recived");
     }
 }  
 else { 
     mirrorlink::abort(503, "no session password exist");
 }
-
 ?>

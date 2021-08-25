@@ -7,7 +7,7 @@
 
 include_once("mirrorlink.php");
 
-//ini_set('display_errors', 'Off');
+ini_set('display_errors', 'Off');
 header('Access-Control-Allow-Origin: *');
 session_start();
 
@@ -27,25 +27,37 @@ if($_SESSION['req']['count'] < 500) {
 }
 
 // save password in session.
-if(isset($_POST['pass'])) {
-    $pass       = $_POST['pass'] ;
+if(isset($_POST['password'], $_POST['username'])) {
+    $password   = $_POST['password'];
+    $username   = $_POST['username'];
+
     $mirrorlink = new mirrorlink($_SERVER['SERVER_ADDR']);
 
-    if($mirrorlink->varifyPassword($pass) == true) {
-        $_SESSION['pass'] = $pass;
+    if($mirrorlink->varifyPassword($username, $password) == true) {
+        $_SESSION['password'] = $password;
+        $_SESSION['username'] = $username;
+
         session_write_close();
+        
         echo json_encode(["status" => 1]);
     } else {
         mirrorlink::abort(502, "incorrect password");
     }
 } // use password in session and given URL.
-else if(isset($_SESSION ['pass'])) {
-    $pass       = $_SESSION['pass'];
+else if(isset($_SESSION ['password'])) {
+    $password   = $_SESSION['password'];
+    $username   = $_SESSION['username'];
+
+
     $mirrorlink = new mirrorlink($_SERVER['SERVER_ADDR'], 3500000000);
     
-    if(isset($_POST['url'])) {
+    if($mirrorlink->varifyPassword($username, $password) == false) {
+        unset($_SESSION['password'],$_SESSION['username']);
+        mirrorlink::abort(-5, "");
+    }
+    else if(isset($_POST['url'])) {
         $url        = $_POST['url'];
-        list($status ,$output) = $mirrorlink->createMirrorLink($url,$pass);
+        list($status ,$output) = $mirrorlink->createMirrorLink($url, $username, $password);
 
         echo json_encode( [
                 "status"            => $status,
@@ -55,7 +67,7 @@ else if(isset($_SESSION ['pass'])) {
     }
     else if(isset($_POST['getUnvarifiedList'])) {
 
-        if($mirrorlink->getUsername($pass) == 'admin') {
+        if($mirrorlink->getUsername($password) == 'admin') {
             echo json_encode([
                 "status"            =>  1,
                 "unvarifiedList"    =>  $mirrorlink->getUnvarifiedList()
@@ -67,7 +79,7 @@ else if(isset($_SESSION ['pass'])) {
             ]);
         }
     }
-    else if(isset($_POST['getFiles'])) {
+    else if(isset($_POST['updateFileList'])) {
         $fileList = mirrorlink::fileList('../pages/download/');
 
         echo json_encode([
@@ -77,7 +89,7 @@ else if(isset($_SESSION ['pass'])) {
         ]);
     }
     else if(isset($_POST['removeFile'], $_POST['name'])) {
-        $resutl = $mirrorlink->removeFile($_POST['name'], $pass);
+        $result = $mirrorlink->removeFile($_POST['name'], $password);
 
         if($result) {
             echo json_encode(["status"        =>  1]);

@@ -18,7 +18,7 @@ class mirrorlink extends baseConnector {
         parent::__construct();
         $this->serverAddress    = $serverAddr;
         $this->maxSpace         = $maxSpace;
-        $this->downloadDir    = $this->baseUrl.'pages/download/';
+        $this->downloadDir      = $this->baseUrl.'pages/download/';
         
 
         $result = $this->createTable($this->databaseName,"passwordlist");
@@ -27,13 +27,13 @@ class mirrorlink extends baseConnector {
         }
     }
 
-    public function getUsername(string $password):?string {
-        $md5pass = md5($password);
-        $result = $this->connection->query("SELECT * FROM `passwordlist` WHERE `password` = '$md5pass'");
+    public function getUsername(string $username):?string {
+        $username   = filter_var($username,FILTER_SANITIZE_ADD_SLASHES);
+        $result = $this->connection->query("SELECT * FROM `passwordlist` WHERE `username` = '$username'");
 
         if($result) {
             if($row = $result->fetch_assoc()) {
-                return $row['username'];
+                return $row['password'];
             }
         }
         return "";
@@ -43,8 +43,8 @@ class mirrorlink extends baseConnector {
      * 
      * check if password is correct.
      */
-    public function varifyPassword($password):bool {
-        return $this->getUsername($password) !== "";
+    public function varifyPassword($username, $password):bool {
+        return $this->getUsername($username) == md5($password);
     }
 
     public function varifyUser(int $id): bool {
@@ -103,13 +103,13 @@ class mirrorlink extends baseConnector {
      * @return string 
      * create a mirror link from given URL.
      */
-    public function createMirrorLink(string $url,string $password) {
+    public function createMirrorLink(string $url, string $username, string $password) {
         $url = filter_var($url , FILTER_SANITIZE_URL);
         $len = strlen($url);
         $usedSpace      = $this->calculateUsedSpace();
         $remainedSpace  = $this->getMaxSpace() - $usedSpace;
     
-        if($this->varifyPassword($password) != null && 3 < $len && $len < 512) {
+        if($this->varifyPassword($username, $password) == true && 3 < $len && $len < 512) {
             /**
              * create download folder on 0777 mode.
              */
@@ -118,15 +118,14 @@ class mirrorlink extends baseConnector {
             }
 
             if($this->isFileExist($this->downloadDir, basename($url)) == true)
-                return array(-102, null); //repetative
+                return array(-102, null); //return error code (file is repetative)
             
             /**
              * validate  $urlEXE.
              */
             if (filter_var($url, FILTER_VALIDATE_URL) == TRUE && $this->endsWith($url, ["php","sh","html","js","py","SCR","PDF","VBS","RTF","DOC","XLS",]) == FALSE) {
                 $hash = bin2hex(random_bytes(4));
-                $outputName = $this->downloadDir."$hash-".basename($url);
-    
+                $outputName = $this->downloadDir."$hash-".basename($url);    
     
                 $fileSize = $this->urlFileSize($url);
     
@@ -134,19 +133,20 @@ class mirrorlink extends baseConnector {
                     $fp = fopen($url, 'r');
     
                     if ( $fp ) {
-                        file_put_contents($outputName, $fp);    //write content to the file.
+                        if(file_put_contents($outputName, $fp) == false) //write content to the file.
+                            return array(-101, null);           //return error code (can't get file)
                         fclose($fp);                            //close file.
                         chmod($outputName, 0744);               //change file permission
                         
-                        return array(1 , basename($outputName)); //downloaded
+                        return array(1 , basename($outputName));//return success code (file downloaded)
                     }
                     else {
-                        return array(-100, null); //file not found
+                        return array(-100, null); //return error code (file not found)
                     }
                 }
             }
         }
-        return array(-101, null); //invalid
+        return array(-101, null); //return error code (url is invalid)
     }
 
     /**
@@ -213,8 +213,8 @@ class mirrorlink extends baseConnector {
      * @return bool 
      * remove file.
      */
-    public function removeFile($fileName, $password) {
-        if($this->getUsername($password) == 'admin') {
+    public function removeFile(string $fileName,string $password) {
+        if($this->getUsername("admin") == md5($password) && file_exists($this->downloadDir.$fileName)) {
             unlink($this->downloadDir.$fileName);
             return true;
         }

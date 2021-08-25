@@ -17,6 +17,11 @@ class mirorlinkAjax {
 
         $("#submit").click(mirorlinkAjax.submitFile);
         $("#register").click(mirorlinkAjax.register);
+
+        $("#urls").attr('disabled',true);
+        $("#submit").attr('disabled',true);
+
+        $("#login").click(mirorlinkAjax.login);
     }
 
     static submitFile() {
@@ -45,24 +50,31 @@ class mirorlinkAjax {
                     if(json.status == 1) {
                         mirorlinkAjax.updateFileList();
                         mirorlinkAjax.updateUnvarifiedList();
+                        $("#urls").attr('disabled',false);
+                        $("#submit").attr('disabled',false);
                     }
                     else {
-                        login();
+                        $("#login-modal").modal('show');
                     }
                 });
     }
 
     static login() {
-        let pass = prompt("Enter your password:");
-        $.post('../functions/mirrorlinkAjax.php', { pass: pass })
+        let password = $("#loginPassword").val();
+        let username = $("#loginUsername").val();
+
+        $.post('../functions/mirrorlinkAjax.php', { password: password, username : username })
             .done(function (response) {
                     let json = JSON.parse(response);
                     if (json.status == 1) {
                         mirorlinkAjax.setMesssage("Logged in successfully.", "alert-success");
                         mirorlinkAjax.updateFileList();
                         mirorlinkAjax.updateUnvarifiedList();
+                        
+                        $("#urls").attr('disabled',false);
+                        $("#submit").attr('disabled',false);
                     } else {            
-                        mirorlinkAjax.setMesssage("login failed.", "alert-warnning");
+                        mirorlinkAjax.setMesssage("login failed.", "alert-danger");
                     }
                 });
     }

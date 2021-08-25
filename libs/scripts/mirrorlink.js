@@ -1,112 +1,88 @@
-$(document).ready(() => {
+var myEvent = new EventTarget;
 
-    let gFile = function() { getFiles().then(deleteFilesEvent);}   
-     
-    hasSession().then(gFile).catch( function() {
-        login().then(gFile)
-    });
+$(document).ready(function() {
+     var mirrorlink = new mirorlinkAjax();
+});
 
-    $("#urls").keyup(urlKeyup);
-    $("#urls").focusout(validateUrls);
+class mirorlinkAjax {
+    constructor () {
+        mirorlinkAjax.hasSession();
 
-    $("#submit").click(() => {
+        mirorlinkAjax.registerEvents();
+    }
+
+    static registerEvents() {
+        $("#urls").keyup(mirorlinkAjax.urlKeyup);        
+        $("#urls").focusout(mirorlinkAjax.validateUrls);
+
+        $("#submit").click(mirorlinkAjax.submitFile);
+        $("#register").click(mirorlinkAjax.register);
+    }
+
+    static submitFile() {
         if($("#urls").val().length > 0) {
-            downloadRequest().then(function() {
-                $("#submit").attr('disabled', false);
-                getFiles().then(deleteFilesEvent);
-            });
-
+            mirorlinkAjax.downloadRequest();
             $("#submit").attr('disabled', true);
             $("#urls").val('');
         }
-    });
-});
-
-function removeFile(filename) {
-    let promise = new Promise((resolve, reject) => {
-        $.post('../functions/mirrorlinkAjax.php', { removeFile: true, name : filename}
-        ).done(function (response) {
-            let json = JSON.parse(response);
-            if (json.status == 1) {
-                resolve();
-            } else {
-                reject();
-            }
-        });
-    });
-
-    return promise;
-}
-
-function hasSession() {
-    let promise = new Promise((resolve, reject) => {
-        $.post('../functions/mirrorlinkAjax.php', {checkSession : true} 
-        ).done(function(response) {
-            let json = JSON.parse(response);
-            if(json.status == 1)
-                resolve();
-            else
-                reject();
-        });
-    });
-
-    return promise;
-}
-
-function deleteFilesEvent() {
-    $(".delete-file").click(function() {
-        removeFile($(this).attr('aria-label')).then(function() {
-            getFiles().then(deleteFilesEvent)
-        });
-    });
-}
-
-function urlKeyup(event) {
-    let disp    = $('#charCount');
-    let input   = $(this);
-    let chars   = input.val().length;
-    let lines   = (input.val().match(/[^\n]+/g) || []).length;
-    let rows    = (input.val().match(/\n/g)     || []).length;
-
-    input.attr('rows', rows + 2);
-    disp.html(`${chars} ch<br> ${lines} ln`);
-
-    if(event.key == "Enter") 
-        validateUrls();
-}
-
-function validateUrls() {
-    let input   = $("#urls");
-    let exp     = /^((https?:\/\/)?(w{3}\.)?\w{2,256}\.[a-z]{2,8}[-a-zA-Z0-9()@:%_\+.~#?&//=\[\]]* *\n?|\n)*$/;
-    if(input.val().trim().length == 0 || input.val().match(exp)) {       
-        input.removeClass("is-invalid");        
-    } else {
-        input.addClass("is-invalid");
     }
-}
+    
+    static removeFile(filename) {
+        $.post('../functions/mirrorlinkAjax.php', { removeFile: true, name : filename})
+            .done(function (response) {
+                    let json = JSON.parse(response);
+                    if (json.status == 1) {
+                        mirorlinkAjax.updateFileList();
+                        mirorlinkAjax.setMesssage("File removed successfully")
+                    } 
+                });
+    }
 
-function login() {
-    let pass = prompt("Enter your password:");
-    let promise = new Promise((resolve, reject) => {
-        $.post('../functions/mirrorlinkAjax.php', { pass: pass }
-        ).done(function (response) {
-            let json = JSON.parse(response);
-            if (json.status == 1) {
-                setMesssage("Logged in successfully.", "alert-success");
-                resolve();
-            } else {            
-                setMesssage("login failed.", "alert-warnning");
-                reject();
-            }
-        });
-    });
+    static hasSession() {
+        $.post('../functions/mirrorlinkAjax.php', {checkSession : true})
+            .done(function(response) {
+                    let json = JSON.parse(response);
+                    if(json.status == 1) {
+                        mirorlinkAjax.updateFileList();
+                        mirorlinkAjax.updateUnvarifiedList();
+                    }
+                    else {
+                        login();
+                    }
+                });
+    }
 
-    return promise;    
-}
+    static login() {
+        let pass = prompt("Enter your password:");
+        $.post('../functions/mirrorlinkAjax.php', { pass: pass })
+            .done(function (response) {
+                    let json = JSON.parse(response);
+                    if (json.status == 1) {
+                        mirorlinkAjax.setMesssage("Logged in successfully.", "alert-success");
+                        mirorlinkAjax.updateFileList();
+                        mirorlinkAjax.updateUnvarifiedList();
+                    } else {            
+                        mirorlinkAjax.setMesssage("login failed.", "alert-warnning");
+                    }
+                });
+    }
+    
+    static urlKeyup(event) {
+        let disp    = $('#charCount');
+        let input   = $(this);
+        let chars   = input.val().length;
+        let lines   = (input.val().match(/[^\n]+/g) || []).length;
+        let rows    = (input.val().match(/\n/g)     || []).length;
 
-function downloadRequest() {
-    let promise = new Promise((resolve, reject) => {
-        
+        input.attr('rows', rows + 2);
+        disp.html(`${chars} ch<br> ${lines} ln`);
+
+        if(event.key == "Enter") {
+            mirorlinkAjax.validateUrls();
+        }
+    }
+
+    static downloadRequest() {        
         const urls              = $('#urls').val().split('\n');
         const progressContainer = $('#download-process');
         let progresses          = [];
@@ -121,123 +97,159 @@ function downloadRequest() {
             const progress = $('<div class="ring-loader mx-1"><div></div><div></div><div></div><div></div></div>');
             progressContainer.append(progress);
             progresses.push(progress);
-            try {
-                $.post('../functions/mirrorlinkAjax.php', { url: url, idx : index++}
-                ).done(function(response) {
-                    let idx     = parseInt(this.data.match(/(?<=idx=)\d/)[0]);
-                    let json    = JSON.parse(response);
-    
-                    if (json.status == 1) {
-                        getFiles();
-                        progresses[idx].addClass('ok');
-                    } else {
-                        progresses[idx].addClass('fail');                
-                    }
 
-                    setTimeout(() => {progresses[idx].remove()}, 1000);
-                    if(--index == 0)
-                        resolve();
-                });
-            } catch {
-                reject();
-            }
+            $.post('../functions/mirrorlinkAjax.php', { url: url, idx : index++}).
+                done(function(response) {
+                        let idx     = parseInt(this.data.match(/(?<=idx=)\d/)[0] || 0);
+                        let json    = JSON.parse(response);
+        
+                        if (json.status == 1) {
+                            progresses[idx].addClass('ok');
+                            mirorlinkAjax.updateFileList();
+                        } else {
+                            progresses[idx].addClass('fail');                
+                        }
+                        
+                        setTimeout(() => progresses[idx].remove(), 1000);
+                        $("#submit").attr('disabled', false);
+                    });
         }
-    });
+    }
 
-    return promise;
-}
-
-function getUnvarifiedList() {
-    $.post('../functions/mirrorlinkAjax.php', { getUnvarifiedList: true }
-    ).done(function (response) {
-        let json = JSON.parse(response);
-        if (json.status == 1) {
-            setMesssage("Registred successfully.", "alert-success");            
+    static validateUrls() {
+        let input   = $("#urls");
+        let exp     = /^((https?:\/\/)?(w{3}\.)?\w{2,256}\.[a-z]{2,8}[-a-zA-Z0-9()@:%_\+.~#?&//=\[\]]* *\n?|\n)*$/;
+        if(input.val().trim().length == 0 || input.val().match(exp)) {       
+            input.removeClass("is-invalid");        
         } else {
-            setMesssage("Failed to register.", "alert-danger");
+            input.addClass("is-invalid");
         }
-    });
-}
+    }
 
-function register() {
-    let username = $("#regUsername").val();
-    let password = $("#regPassword").val();
-    $.post('../functions/mirrorlinkAjax.php', { username: username, password : password}
-    ).done(function (response) {
-        let json = JSON.parse(response);
-        if (json.status == 1) {
-            
-        }
-    });
-}
+    static updateUnvarifiedList() {    
+        $.post('../functions/mirrorlinkAjax.php', { getUnvarifiedList: true })
+            .done(function (response) {
+                    let json = JSON.parse(response);
+                    if (json.status == 1) {
+                        let usersContainer  = $("#users-container");
+                        let rowColor        = false;
 
-function getFiles() {
-    let promise = new Promise((resolve, reject) => {
+                        usersContainer.html('');
 
-        $.post('../functions/mirrorlinkAjax.php', { getFiles: true }
-        ).done(function (response) {
-            const json = JSON.parse(response);
-            let progressContainer   = $("#progress-container");
-            let linksContainer      = $("#links-container");
-            
-            progressContainer.html("");
-            linksContainer.html("");
-            
-            let id          = 1;
-            let fileSize    = 0;
-            let usedSpace   = 0;
-            
-            if (json.status == 1) {
-                for(const file of json.files) {
-                    fileSize = (file.size/1048576).toFixed(1);
-                    usedSpace += file.size;
+                        for(const user of json.unvarifiedList) {
+                            usersContainer.append(mirorlinkAjax.unvarifiedUsersRowGenerator(user.id, user.username, rowColor));
+                            rowColor        = !rowColor;
+                        }
 
-                    // append progress bar
-                    progressContainer.append(`<div class='progress-bar text-black-50' 
-                        style='width: ${(file.size/json.maxSpace * 100).toFixed(1)}%;
-                        background-color: hsl(${(id*45)% 255}, 100%, 80%);'>
-                        ${fileSize > 280? fileSize : '' }</div>`);
-
-                    // append to file list
-                    linksContainer.append(currentLinksRowGenerator(id, file.name, file.size));
-                    id++;
-                }
-                
-                $("#remained-size").html((usedSpace/1048576).toFixed(1) + '/' + (json.maxSpace/1048576).toFixed(1) + ' Mb');
-                resolve();
-            }
-            else {
-                reject();
-            }
-        });
-    });    
-
-    return promise;
-}
-
-function currentLinksRowGenerator(id, name, size) {
-    return `<div class='row mt-1 rounded bg-light'>
-            <div class='col-sm-1 rounded-top rounded-sm-left text-secondary' style='background-color: hsl(${(id*45) % 255}, 100%, 95%);'>
-                ${id}</div><div class='col-sm-7' title='${name}'>
-                <a class='text-secondary text-decoration-none' href='download/${name}'>${name.slice(name.indexOf('-')+1)}</a>
-            </div>
-            <div class='col-sm-4 text-right small'>
-            ${(size > 1048576? size/1048576 : size/1024).toFixed(1)} 
-            ${size > 1048576? 'Mb' : 'Kb'}
-            <i class="bi bi-trash delete-file" title="remove file" aria-label="${name}"></i>
-            </div></div>`;
-}
-
-function setMesssage(message, className) {
-    let messageCont = $('#message');
-
-    messageCont.fadeIn();
-    messageCont.html(message);
-    messageCont.addClass(className);
+                        $(".accept-user").click(function(){ mirorlinkAjax.userAction('accept', $(this).attr('aria-label')); } );
+                        $(".reject-user").click(function(){ mirorlinkAjax.userAction('reject', $(this).attr('aria-label')); } );
+                    }
+                });
+    }
     
-    setTimeout(() => {
-        messageCont.fadeOut();
-        messageCont.fadeOut();
-        messageCont.removeClass(className);
-    }, 4000);
+    static userAction(action, id) {
+        $.post('../functions/mirrorlinkAjax.php', { useraction: action, userId : id })
+            .done(function (response) {
+                    let json = JSON.parse(response);
+                    if (json.status == 1) {
+                        mirorlinkAjax.updateUnvarifiedList();
+                    }
+                });
+    }
+    
+    static register() {
+        let username = $("#regUsername").val();
+        let password = $("#regPassword").val();
+    
+        $("#regUsername").val('');
+        $("#regPassword").val('');
+    
+        $.post('../functions/mirrorlinkAjax.php', { newUsername: username, newPassword : password})
+            .done(function (response) {
+                    let json = JSON.parse(response);
+                    if (json.status == 1) {
+                        mirorlinkAjax.setMesssage("Registred successfully.", "alert-success");
+                        mirorlinkAjax.updateUnvarifiedList();           
+                    } else {
+                        mirorlinkAjax.setMesssage("Failed to register.", "alert-danger");
+                    }
+                });
+    }
+
+    static updateFileList() {
+        $.post('../functions/mirrorlinkAjax.php', { updateFileList: true })
+            .done(function (response) {
+                    const json = JSON.parse(response);
+                    let progressContainer   = $("#progress-container");
+                    let linksContainer      = $("#links-container");
+                    
+                    progressContainer.html("");
+                    linksContainer.html("");
+                    
+                    let id          = 1;
+                    let fileSize    = 0;
+                    let usedSpace   = 0;
+                    
+                    if (json.status == 1) {
+
+                        for(const file of json.files) {
+                            fileSize = (file.size/1048576).toFixed(1);
+                            usedSpace += file.size;
+    
+                            // append progress bar
+                            progressContainer.append(`<div class='progress-bar text-black-50' 
+                                style='width: ${(file.size/json.maxSpace * 100).toFixed(1)}%;
+                                background-color: hsl(${(id*45)% 255}, 100%, 80%);'>
+                                ${fileSize > 280? fileSize : '' }</div>`);
+    
+                            // append to file list
+                            linksContainer.append(mirorlinkAjax.currentLinksRowGenerator(id, file.name, file.size));
+                            id++;
+                        }
+                        
+                        $("#remained-size").html((usedSpace/1048576).toFixed(1) + '/' + (json.maxSpace/1048576).toFixed(1) + ' Mb');
+                        $(".delete-file").click(function() { mirorlinkAjax.removeFile($(this).attr('aria-label')); });
+                    }
+                });
+    }
+
+    static currentLinksRowGenerator(id, name, size) {
+        return `<div class='row mt-1 rounded bg-light'>
+                <div class='col-sm-1 rounded-top rounded-sm-left text-secondary' style='background-color: hsl(${(id*45) % 255}, 100%, 95%);'>
+                ${id}</div><div class='col-sm-7' title='${name}'>
+                <a class='text-secondary text-decoration-none' href='download/${name}'>${name.slice(name.indexOf('-')+1)}</a></div>
+                <div class='col-sm-4 text-right small'>
+                ${(size > 1048576? size/1048576 : size/1024).toFixed(1)} 
+                ${size > 1048576? 'Mb' : 'Kb'}
+                <i class="bi bi-trash delete-file" title="remove file" aria-label="${name}"></i>
+                </div></div>`;
+    }
+
+    static unvarifiedUsersRowGenerator(id, username, rowColor) {
+        return `<div class='row mt-1 rounded ${rowColor ? 'bg-light' : 'bg-secondary text-light'}'>
+                <div class='col-sm-1'>${id}</div>
+                <div class='col-sm-7'>${username}</div>
+                <div class='col-sm-4 text-center text-sm-right small mb-2'>
+                <i aria-label="${id}" title="reject" class="reject-user bi bi-trash"></i>
+                <i aria-label="${id}" title="accept" class="accept-user bi bi-bookmark-check"></i>
+                </div></div>`;
+    }
+    
+    static setMesssage(message, className) {
+        let messageCont = $('#message');
+    
+        messageCont.fadeIn();
+        messageCont.html(message);
+        messageCont.addClass(className);
+        
+        setTimeout(function() {
+                        messageCont.fadeOut();
+                        messageCont.removeClass(className);
+                    }, 4000);
+    }
 }
+
+
+
+
+

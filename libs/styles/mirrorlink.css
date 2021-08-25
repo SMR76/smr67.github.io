@@ -1,6 +1,9 @@
 #urls               {min-height: 15px; resize:none;}
-.delete-file        {cursor: pointer;}
-.delete-file:hover  {color: #ff4242;}
+
+.bi-trash                   {cursor: pointer;}
+.bi-trash:hover             {color: #ff4242;}
+.bi-bookmark-check          {cursor: pointer;}
+.bi-bookmark-check:hover    {color: #42ff42;}
 
 @media (min-width: 576px) {
     .rounded-sm-left {

@@ -1,45 +1,85 @@
 $(document).ready(() => {
-    repositories();
+    
+    repositories().then(function () {
+        // open link in touch devices with double tap.
+        if('ontouchstart' in window) {
+            let hoverableElements = $("#contactMe a:not(#donate), repo-container");
+
+            hoverableElements.click(function(e) {
+                if(this.tap) {
+                    this.tap = false;
+                } else {
+                    this.tap = true;
+                    setTimeout((x) => x.tap = false, 500, this); 
+                    e.preventDefault();
+                }
+            });
+
+            $('[class$="tooltiptext"]').append("<br><small>(double tap to open)</small>");
+        }
+    });
+
     coffee();
     googleAnalytic();
     events();
 });
 
-var country = "unknown";
-async function coffee() {
+async function coffee() {    
+    var country = "";
     try {
-        await $.get("https://ipwhois.app/json/").then((data) => {
+        $.get("https://ipwhois.app/json/objects=country").then(function(data) {
             country = data.country;
+        }).then(function() {    
+            
+            let coffeeElement = $("#donate");
+            let tooltip = $("#donate p");
+            
+            if(country === "Iran") {
+                coffeeElement.attr('href','https://idpay.ir/s-m-r');
+                coffeeElement.attr('target','_blank');
+            }
+            else {
+                let text = `Donate to my <b class="text-warning">Bitcoin Cash</b><br><small>click to copy!</small>`;
+                tooltip.html(text);
+                coffeeElement.mouseout(function() { tooltip.html(text);});
+            }
+
+            let copyWalletAddr = function() {
+                if(country !== "Iran") {
+                    $("#donate p").html(`<i class="text-light"> Copied!</i>`);
+                    let bitcoincashAddress = "bitcoincash:qrnwtxsk79kv6mt2hv8zdxy3phkqpkmcxgjzqktwa3";
+                    copyToClipboard(bitcoincashAddress);
+                }
+            }
+
+            if('ontouchstart' in window) {
+                coffeeElement.click(function(e) {
+                    if(this.tap == true) { copyWalletAddr(); }
+                    else { this.tap = true; }
+                    e.preventDefault();
+                });
+
+                coffeeElement.mouseleave(function() {this.tap = false});
+            }
+            else {
+                coffeeElement.click(copyWalletAddr);
+            }
         });
-    } catch(e) {
+    } catch {
         //error
-    }
-    let coffeeElement = $("#donate");
-    
-    if(country === "Iran") {
-        coffeeElement.attr('href','https://idpay.ir/s-m-r');
-        coffeeElement.attr('target','_blank');
-    }
-    else {
-        let text = `Donate to my <b class="text-warning">Bitcoin Cash</b><br><small>click to copy!</small>`;
-        let tt = coffeeElement.children('p');      
-        tt.html(text);        
-        
-        coffeeElement.mouseout(()=>{
-            tt.html(text);
-        });
     }
 }
 
 async function repositories() {
     let url = "functions/repositoryAjax.php";
     let rpositoriesContainer = $("#repositories");
+    let oddCol = 0, cols = "";
 
-    let oddCol = 0;
-    let cols = "" , rows = "";
+    let promise = $.get(url).then((response) => {
+        let repositories = "";
 
-    await $.get(url).then((repositories) => {
-        repositories = JSON.parse(repositories);
+        try { repositories = JSON.parse(response);}
+        catch { return; } // if failed to parse response terminate function 
 
         for (const repository of repositories) {
             cols += `<div class="col-12 col-md-6">${repositoryCellHtml(repository)}</div>`;
@@ -51,14 +91,17 @@ async function repositories() {
         }
         rpositoriesContainer.append(`<div class="row">${cols}</div>`);
     });
+
+    return promise;
 }
 
 function repositoryCellHtml(repository) {
-    let forked = repository.forked == 1? '<sub class="text-primary">forked</sub>' : '';
+    let forked  = repository.forked == 1? '<sub class="text-primary">forked</sub>' : '';
+    let repoUrl = repository.mainBranchUrl.slice(0,repository.mainBranchUrl.indexOf('/commits'));
 
     return `<div class="container-fluid repo-container pt-2">
             <div class="row"><div class="col-12 col-xl-6">
-            <h6>${repository.name}</h6> ${forked}
+            <h6><a href="${repoUrl}" class="text-dark text-decoration-none" target="_blank">${repository.name}</a></h6> ${forked}
             <span class="badge badge-dark ">${repository.lastTagName}</span>
             <p class="text-muted small">${repository.description || "no description"}</p>
             </div><div class="col-12 col-xl-6">
@@ -104,24 +147,13 @@ function events() {
         }
     });
 
-    // handle donate click
-    $("#donate").on('click', function() {
-        if(country !== "Iran") {
-            let tt = $(this).children('p');
-            tt.html(`<i class="text-light"> Copied!</i>`);
-
-            let bitcoincashAddress = "bitcoincash:qrnwtxsk79kv6mt2hv8zdxy3phkqpkmcxgjzqktwa3";
-            copyToClipboard(bitcoincashAddress);
-        }
-    });
-
     $("#status").on('click',async function() {
         let token = prompt("Enter the Token:", "");
 
         if(token) {
             changeStatus("loading", true);
 
-            await $.get("cronjob/updateRepositoryData.php?token="+token).then((data) => {
+            $.get("cronjob/updateRepositoryData.php?token="+token).then((data) => {
                 let json = JSON.parse(data);
                 if(json.status == 1) { 
                     changeStatus("success"); 
@@ -130,9 +162,7 @@ function events() {
                 else {
                     changeStatus("error");
                 }
-            });
-            
-            setTimeout(changeStatus, 4500, "loading");
+            }).then(() => {setTimeout(changeStatus, 4500, "loading");});
         }
     });
 
@@ -166,8 +196,4 @@ function googleAnalytic() {
     gtag('js', new Date());
 
     gtag('config', 'G-XL9HMP5PK3');
-}
-
-function isTouchDevice() {
-    return (('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0));
 }

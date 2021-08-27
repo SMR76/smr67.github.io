@@ -28,7 +28,8 @@
 
 #contactMe div a            {position: absolute;}
 #contactMe div img          {filter: grayscale(100%);transition: all 0.5s ease;}
-#contactMe img:hover        {filter: grayscale(0%);}
+#contactMe img:hover,
+#contactMe .hover           {filter: grayscale(0%);}
 
 .bi-refresh::before         {font-family: fa-solid-900 !important; content: "\f021"; opacity: 0; transition: opacity 0.4s ease;}
 .bi-check::before           {font-family: fa-solid-900 !important; content: "\f00c"; opacity: 0; transition: opacity 0.4s ease;}

@@ -134,8 +134,10 @@ class mirrorlink extends baseConnector {
     
                     if ( $fp ) {
                         $try = 3;   // try three times if faild to get content.
-                        while(file_put_contents($outputName, $fp) == false || $try--) //write content to the file.
+                        while(file_put_contents($outputName, $fp) == false && --$try); //write content to the file. (3 chances)
+                        if($try <= 0)
                             return array(-101, null);           //return error code (can't get file)
+
                         fclose($fp);                            //close file.
                         chmod($outputName, 0744);               //change file permission
                         

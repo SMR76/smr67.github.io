@@ -229,7 +229,7 @@ class mirorlinkAjax {
         return `<div class='row mt-1 rounded bg-light'>
                 <div class='col-sm-1 rounded-top rounded-sm-left text-secondary' style='background-color: hsl(${(id*45) % 255}, 100%, 95%);'>
                 ${id}</div><div class='col-sm-7' title='${name}'>
-                <a class='text-secondary text-decoration-none' href='download/${name}'>${name.slice(name.indexOf('-')+1)}</a></div>
+                <a class='text-secondary text-decoration-none' href='download/${name}' target="_blank">${name.slice(name.indexOf('-')+1)}</a></div>
                 <div class='col-sm-4 text-right small'>
                 ${(size > 1048576? size/1048576 : size/1024).toFixed(1)} 
                 ${size > 1048576? 'Mb' : 'Kb'}

@@ -130,10 +130,11 @@ class mirrorlink extends baseConnector {
                 $fileSize = $this->urlFileSize($url);
     
                 if($fileSize > 0 || $fileSize < $remainedSpace) {
-                    $fp = fopen($url, 'r');
+                    $fp = fopen(basename($url), 'r');
     
                     if ( $fp ) {
-                        if(file_put_contents($outputName, $fp) == false) //write content to the file.
+                        $try = 3;   // try three times if faild to get content.
+                        while(file_put_contents($outputName, $fp) == false || $try--) //write content to the file.
                             return array(-101, null);           //return error code (can't get file)
                         fclose($fp);                            //close file.
                         chmod($outputName, 0744);               //change file permission

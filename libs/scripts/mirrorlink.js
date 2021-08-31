@@ -1,4 +1,8 @@
-var myEvent = new EventTarget;
+JSON.isValid = function(str) {
+    try { JSON.parse(str); } 
+    catch (e) { return false; }
+    return true;
+}
 
 $(document).ready(function() {
      var mirrorlink = new mirorlinkAjax();
@@ -7,12 +11,11 @@ $(document).ready(function() {
 class mirorlinkAjax {
     constructor () {
         mirorlinkAjax.hasSession();
-
         mirorlinkAjax.registerEvents();
     }
 
     static registerEvents() {
-        $("#urls").keyup(mirorlinkAjax.urlKeyup);        
+        $("#urls").keyup(mirorlinkAjax.urlKeyup);
         $("#urls").focusout(mirorlinkAjax.validateUrls);
 
         $("#submit").click(mirorlinkAjax.submitFile);
@@ -73,8 +76,9 @@ class mirorlinkAjax {
                         
                         $("#urls").attr('disabled',false);
                         $("#submit").attr('disabled',false);
-                    } else {            
+                    } else {
                         mirorlinkAjax.setMesssage("login failed.", "alert-danger");
+                        setTimeout( () => $("#login-modal").modal('show') , 500);
                     }
                 });
     }
@@ -112,14 +116,20 @@ class mirorlinkAjax {
 
             $.post('../functions/mirrorlinkAjax.php', { url: url, idx : index++}).
                 done(function(response) {
-                        let idx     = parseInt(this.data.match(/(?<=idx=)\d/)[0] || 0);
-                        let json    = JSON.parse(response);
+                        let idx     = parseInt(this.data.match(/(?<=idx=)\d/)[0] || 0);                        
+                        let json    = "";
+                        if(JSON.isValid(response)) {
+                            json = JSON.parse(response);
+                        } 
+                        else {
+                            mirorlinkAjax.setMesssage(response,"alert-danger", 100000);
+                        }
         
                         if (json.status == 1) {
                             progresses[idx].addClass('ok');
                             mirorlinkAjax.updateFileList();
                         } else {
-                            progresses[idx].addClass('fail');                
+                            progresses[idx].addClass('fail');
                         }
                         
                         setTimeout(() => progresses[idx].remove(), 1000);
@@ -158,7 +168,7 @@ class mirorlinkAjax {
                     }
                 });
     }
-    
+
     static userAction(action, id) {
         $.post('../functions/mirrorlinkAjax.php', { useraction: action, userId : id })
             .done(function (response) {
@@ -168,7 +178,7 @@ class mirorlinkAjax {
                     }
                 });
     }
-    
+
     static register() {
         let username = $("#regUsername").val();
         let password = $("#regPassword").val();
@@ -247,7 +257,7 @@ class mirorlinkAjax {
                 </div></div>`;
     }
     
-    static setMesssage(message, className) {
+    static setMesssage(message, className, delay = 4000) {
         let messageCont = $('#message');
     
         messageCont.fadeIn();
@@ -257,7 +267,7 @@ class mirorlinkAjax {
         setTimeout(function() {
                         messageCont.fadeOut();
                         messageCont.removeClass(className);
-                    }, 4000);
+                    }, delay);
     }
 }
 

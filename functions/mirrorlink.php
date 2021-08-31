@@ -12,13 +12,17 @@ include_once("baseConnector.php");
 class mirrorlink extends baseConnector {
     private $maxSpace;
     private $downloadDir;
+    private $context;
 
     public function __construct(string $serverAddr ,$maxSpace   = 3500000000) {
         // constructor body
         parent::__construct();
         $this->serverAddress    = $serverAddr;
         $this->maxSpace         = $maxSpace;
-        $this->downloadDir      = $this->baseUrl.'pages/download/';
+        $this->downloadDir      = $this->baseUrl.'pages/download/';        
+        $this->context          = stream_context_create([
+            "http" => [ "header" => "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36\n" ]
+            ]);
         
 
         $result = $this->createTable($this->databaseName,"passwordlist");
@@ -117,27 +121,23 @@ class mirrorlink extends baseConnector {
                 mkdir($this->downloadDir, 0777, true);
             }
 
-            if($this->isFileExist($this->downloadDir, basename($url)) == true)
+            $filename   = mb_ereg_replace("([^\w\s\d\-_~,;\[\]\(\).])", '', basename($url)); // sanetize filename
+
+            if($this->isFileExist($this->downloadDir, $filename) == true)
                 return array(-102, null); //return error code (file is repetative)
             
             /**
              * validate  $urlEXE.
              */
             if (filter_var($url, FILTER_VALIDATE_URL) == TRUE && $this->endsWith($url, ["php","sh","html","js","py","SCR","PDF","VBS","RTF","DOC","XLS",]) == FALSE) {
-                $hash = bin2hex(random_bytes(4));
-                $outputName = $this->downloadDir."$hash-".basename($url);    
-    
-                $fileSize = $this->urlFileSize($url);
+                $hash       = bin2hex(random_bytes(4));
+                $outputName = $this->downloadDir."$hash-".$filename;
+                $fileSize   = $this->urlFileSize($url);
     
                 if($fileSize > 0 || $fileSize < $remainedSpace) {
-                    $fp = fopen(basename($url), 'r');
-    
+                    $fp = fopen($url, 'r');
                     if ( $fp ) {
-                        $try = 3;   // try three times if faild to get content.
-                        while(file_put_contents($outputName, $fp) == false && --$try); //write content to the file. (3 chances)
-                        if($try <= 0)
-                            return array(-101, null);           //return error code (can't get file)
-
+                        file_put_contents($outputName, $fp);
                         fclose($fp);                            //close file.
                         chmod($outputName, 0744);               //change file permission
                         
@@ -238,7 +238,7 @@ class mirrorlink extends baseConnector {
     }
 
     private function isFileExist(string $root, string $newFileName):bool {
-        $fileList   = glob($root.'*.*');
+        $fileList   = glob($root.'*');
         foreach($fileList as $file) {
             if($newFileName == substr($file,strpos($file, "-") + 1))
                 return true;

@@ -19,7 +19,7 @@ abstract class baseConnector {
         global $gdbName;
 
         $this->databaseName = $gdbName;
-        $this->baseUrl      = dirname(__FILE__)."/../";
+        $this->baseUrl      = "./../";
 
         $this->connection = new mysqli('localhost', $gdbUsername, $gdbPass);
         
